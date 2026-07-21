@@ -1,0 +1,246 @@
+{
+  "schema_version": "1.0",
+  "description": "DocsGPT 企业客服知识库离线评测集。将真实 Agent 回答导出为 JSONL 后，由 scripts/evaluate_rag.py 计算结果。评测集不调用模型，也不会生成或伪造回答。",
+  "cases": [
+    {
+      "id": "CS-001",
+      "category": "售后-质量问题",
+      "question": "质量问题退货运费谁承担？普通快递最高报销多少？",
+      "expected_behavior": "answer",
+      "required_patterns": ["(非人为|质量问题)", "(平台|商家).{0,12}(承担|负责)", "12\\s*元"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_after_sales_policy"]
+    },
+    {
+      "id": "CS-002",
+      "category": "售后-质量问题",
+      "question": "商品有质量问题，售后申请需要在多久内提交？",
+      "expected_behavior": "answer",
+      "required_patterns": ["(签收后|签收之日).{0,8}(15|十五).{0,4}(日|天)"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_after_sales_policy"]
+    },
+    {
+      "id": "CS-003",
+      "category": "售后-质量问题",
+      "question": "质量问题售后申请要提供什么凭证？",
+      "expected_behavior": "answer",
+      "required_patterns": ["(照片|视频|检测说明)", "(清晰|凭证)"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_after_sales_policy"]
+    },
+    {
+      "id": "CS-004",
+      "category": "售后-物流",
+      "question": "质量问题寄回商品能到付吗？",
+      "expected_behavior": "answer",
+      "required_patterns": ["(不建议|不支持|不要).{0,10}到付", "(拒收|普通快递|运单号)"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_after_sales_policy"]
+    },
+    {
+      "id": "CS-005",
+      "category": "售后-非质量问题",
+      "question": "不想要了退货，寄回运费由谁承担？",
+      "expected_behavior": "answer",
+      "required_patterns": ["非质量", "((用户|买家).{0,12}(承担|负责).{0,12}(运费|寄回)|(运费|寄回).{0,12}(用户|买家).{0,12}(承担|负责))"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_after_sales_policy"]
+    },
+    {
+      "id": "CS-006",
+      "category": "售后-非质量问题",
+      "question": "七天无理由退货，商品需要满足什么条件？",
+      "expected_behavior": "answer",
+      "required_patterns": ["(外包装|配件|赠品|说明书)", "(完整|二次销售)"],
+      "source_hints": ["customer_service_after_sales_policy", "customer_service_rag_optimized"]
+    },
+    {
+      "id": "CS-007",
+      "category": "售后-退款",
+      "question": "普通商品退货退款质检通常需要多久？",
+      "expected_behavior": "answer",
+      "required_patterns": ["(1|一).{0,3}(3|三).{0,4}(工作日|天)", "(签收|质检)"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_after_sales_policy"]
+    },
+    {
+      "id": "CS-008",
+      "category": "售后-退款",
+      "question": "大件商品退款质检要几天？",
+      "expected_behavior": "answer",
+      "required_patterns": ["(3|三).{0,3}(5|五).{0,4}(工作日|天)"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_after_sales_policy"]
+    },
+    {
+      "id": "CS-009",
+      "category": "售后-退款",
+      "question": "支付宝退款一般多久到账？",
+      "expected_behavior": "answer",
+      "required_patterns": ["(微信|支付宝)", "(1|一).{0,3}(3|三).{0,4}(工作日|天)"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_after_sales_policy"]
+    },
+    {
+      "id": "CS-010",
+      "category": "售后-退款",
+      "question": "银行卡退款一般多久到账？",
+      "expected_behavior": "answer",
+      "required_patterns": ["银行卡", "(3|三).{0,3}(7|七).{0,4}(工作日|天)"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_after_sales_policy"]
+    },
+    {
+      "id": "CS-011",
+      "category": "物流",
+      "question": "普通商品付款后多久发货？",
+      "expected_behavior": "answer",
+      "required_patterns": ["48\\s*(小时|h)", "(付款|下单)"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_faq", "customer_service_product_membership"]
+    },
+    {
+      "id": "CS-012",
+      "category": "物流",
+      "question": "大促期间发货时效会怎样？",
+      "expected_behavior": "answer",
+      "required_patterns": ["大促", "72\\s*(小时|h)"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_faq", "customer_service_product_membership"]
+    },
+    {
+      "id": "CS-013",
+      "category": "物流",
+      "question": "物流超过48小时没更新怎么办？",
+      "expected_behavior": "answer",
+      "required_patterns": ["(物流异常|异常工单|登记)", "(1|一).{0,3}(2|二).{0,4}(工作日|天)"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_faq", "customer_service_product_membership"]
+    },
+    {
+      "id": "CS-014",
+      "category": "会员",
+      "question": "金卡会员每月可以领什么优惠券？",
+      "expected_behavior": "answer",
+      "required_patterns": ["金卡", "2\\s*张", "199\\s*减\\s*20"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_product_membership"]
+    },
+    {
+      "id": "CS-015",
+      "category": "会员",
+      "question": "金卡会员生日月有什么权益？",
+      "expected_behavior": "answer",
+      "required_patterns": ["金卡", "生日月", "9\\s*折"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_product_membership"]
+    },
+    {
+      "id": "CS-016",
+      "category": "会员",
+      "question": "黑金会员有什么优惠？",
+      "expected_behavior": "answer",
+      "required_patterns": ["黑金", "3\\s*张", "299\\s*减\\s*40"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_product_membership"]
+    },
+    {
+      "id": "CS-017",
+      "category": "会员",
+      "question": "黑金会员有专属客服吗？",
+      "expected_behavior": "answer",
+      "required_patterns": ["黑金", "专属客服"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_product_membership"]
+    },
+    {
+      "id": "CS-018",
+      "category": "积分",
+      "question": "积分可以提现吗？",
+      "expected_behavior": "answer",
+      "required_patterns": ["不可提现", "(优惠券|礼品)"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_product_membership"]
+    },
+    {
+      "id": "CS-019",
+      "category": "积分",
+      "question": "积分怎么抵扣订单金额？",
+      "expected_behavior": "answer",
+      "required_patterns": ["100\\s*积分", "1\\s*元", "20%"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_product_membership"]
+    },
+    {
+      "id": "CS-020",
+      "category": "积分",
+      "question": "退款后积分会返还还是扣回？",
+      "expected_behavior": "answer",
+      "required_patterns": ["(扣回|扣除)", "退款"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_product_membership"]
+    },
+    {
+      "id": "CS-021",
+      "category": "价保",
+      "question": "签收后降价可以申请价格保护吗？",
+      "expected_behavior": "answer",
+      "required_patterns": ["(签收后|签收之日).{0,8}7.{0,4}(日|天)", "(同一商品|同款)", "官方降价"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_product_membership"]
+    },
+    {
+      "id": "CS-022",
+      "category": "价保",
+      "question": "秒杀价和会员专属价可以价保吗？",
+      "expected_behavior": "answer",
+      "required_patterns": ["(秒杀|限时抢购|会员专属价)", "(不计入|不支持|不属于).{0,8}价保"],
+      "source_hints": ["customer_service_rag_optimized", "customer_service_product_membership"]
+    },
+    {
+      "id": "CS-023",
+      "category": "售后-换货",
+      "question": "换货时同款商品缺货怎么办？",
+      "expected_behavior": "answer",
+      "required_patterns": ["缺货", "(退款|同价商品)"],
+      "source_hints": ["customer_service_after_sales_policy"]
+    },
+    {
+      "id": "CS-024",
+      "category": "售后-发票",
+      "question": "退货时纸质发票怎么处理？",
+      "expected_behavior": "answer",
+      "required_patterns": ["纸质发票", "(一并寄回|随商品寄回)"],
+      "source_hints": ["customer_service_after_sales_policy"]
+    },
+    {
+      "id": "CS-025",
+      "category": "边界-海外服务",
+      "question": "海外退货运费最高能报销多少？",
+      "expected_behavior": "abstain",
+      "abstain_patterns": ["(没有|未找到|未明确|不包含).{0,16}(信息|说明|规则)|联系人工客服|人工确认"],
+      "source_hints": []
+    },
+    {
+      "id": "CS-026",
+      "category": "边界-海外服务",
+      "question": "国际快递退货可以提现吗？",
+      "expected_behavior": "abstain",
+      "abstain_patterns": ["(没有|未找到|未明确|不包含).{0,16}(信息|说明|规则)|联系人工客服|人工确认"],
+      "source_hints": []
+    },
+    {
+      "id": "CS-027",
+      "category": "边界-维修",
+      "question": "所有商品都有永久免费维修吗？",
+      "expected_behavior": "abstain",
+      "abstain_patterns": ["(没有|未找到|未明确|不包含).{0,16}(信息|说明|规则)|联系人工客服|人工确认"],
+      "source_hints": []
+    },
+    {
+      "id": "CS-028",
+      "category": "边界-线下服务",
+      "question": "离我最近的线下维修门店在哪？",
+      "expected_behavior": "abstain",
+      "abstain_patterns": ["(没有|未找到|未明确|不包含).{0,16}(信息|说明|规则)|联系人工客服|人工确认"],
+      "source_hints": []
+    },
+    {
+      "id": "CS-029",
+      "category": "边界-人工服务",
+      "question": "人工客服是否提供24小时服务？",
+      "expected_behavior": "abstain",
+      "abstain_patterns": ["(没有|未找到|未明确|不包含).{0,16}(信息|说明|规则)|联系人工客服|人工确认"],
+      "source_hints": []
+    },
+    {
+      "id": "CS-030",
+      "category": "边界-安装服务",
+      "question": "小家电送货上门后免费安装吗？",
+      "expected_behavior": "abstain",
+      "abstain_patterns": ["(没有|未找到|未明确|不包含).{0,16}(信息|说明|规则)|联系人工客服|人工确认"],
+      "source_hints": []
+    }
+  ]
+}

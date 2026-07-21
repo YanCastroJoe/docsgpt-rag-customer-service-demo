@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "cases_file": "evaluation/test_cases.json",
+  "responses_file": "evaluation/responses/optimized-2026-07-21.jsonl",
+  "total_cases": 30,
+  "submitted_cases": 30,
+  "answer_cases_submitted": 24,
+  "abstain_cases_submitted": 6,
+  "metrics": {
+    "answer_complete_pass_rate": 0.9333333333333333,
+    "condition_coverage": 0.9666666666666667,
+    "source_citation_hit_rate": 0.9166666666666666,
+    "abstention_pass_rate": 1.0
+  }
+}
