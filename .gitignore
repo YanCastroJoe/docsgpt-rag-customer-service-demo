@@ -7,3 +7,8 @@ __pycache__/
 .venv/
 node_modules/
 
+# Incomplete local evaluation runs; only named benchmark results are published.
+evaluation/responses/run_*.jsonl
+evaluation/reports/run_*.md
+evaluation/reports/run_*.summary.json
+
