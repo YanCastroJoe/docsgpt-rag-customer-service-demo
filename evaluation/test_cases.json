@@ -184,7 +184,7 @@
       "question": "换货时同款商品缺货怎么办？",
       "expected_behavior": "answer",
       "required_patterns": ["缺货", "(退款|同价商品)"],
-      "source_hints": ["customer_service_after_sales_policy"]
+      "source_hints": ["customer_service_after_sales_policy", "customer_service_rag_optimized"]
     },
     {
       "id": "CS-024",
@@ -192,7 +192,7 @@
       "question": "退货时纸质发票怎么处理？",
       "expected_behavior": "answer",
       "required_patterns": ["纸质发票", "(一并寄回|随商品寄回)"],
-      "source_hints": ["customer_service_after_sales_policy"]
+      "source_hints": ["customer_service_after_sales_policy", "customer_service_rag_optimized"]
     },
     {
       "id": "CS-025",
@@ -231,7 +231,8 @@
       "category": "边界-人工服务",
       "question": "人工客服是否提供24小时服务？",
       "expected_behavior": "abstain",
-      "abstain_patterns": ["(没有|未找到|未明确|不包含).{0,16}(信息|说明|规则)|联系人工客服|人工确认"],
+      "abstain_patterns": ["(没有|未找到|未明确|未提及|不包含|找不到).{0,20}(信息|说明|规则|服务时间)|联系人工客服|人工确认"],
+      "forbidden_patterns": ["基于一般常识|大多数电商平台|9:00|22:00|通常设有|并非全天候"],
       "source_hints": []
     },
     {

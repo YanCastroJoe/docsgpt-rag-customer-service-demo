@@ -1,22 +1,20 @@
 {
   "schema_version": "1.1",
   "cases_file": "evaluation/test_cases.json",
-  "responses_file": "evaluation/responses/raw-2026-07-21.jsonl",
+  "responses_file": "evaluation/responses/v2-2026-08-07.jsonl",
   "total_cases": 30,
   "submitted_cases": 30,
   "answer_cases_submitted": 24,
   "abstain_cases_submitted": 6,
   "metrics": {
-    "answer_complete_pass_rate": 0.9333333333333333,
-    "condition_coverage": 0.95,
+    "answer_complete_pass_rate": 0.9666666666666667,
+    "condition_coverage": 1.0,
     "source_citation_hit_rate": 1.0,
     "abstention_pass_rate": 0.8333333333333334,
-    "end_to_end_pass_rate": 0.9333333333333333
+    "end_to_end_pass_rate": 0.9666666666666667
   },
   "failure_counts": {
-    "answer_condition_miss": 1,
-    "boundary_refusal_miss": 1,
-    "unexpected_abstention": 1
+    "unsupported_boundary_claim": 1
   },
   "category_metrics": {
     "价保": {
@@ -66,13 +64,13 @@
     },
     "积分": {
       "submitted": 3,
-      "end_to_end_passes": 2,
-      "end_to_end_pass_rate": 0.6666666666666666
+      "end_to_end_passes": 3,
+      "end_to_end_pass_rate": 1.0
     },
     "边界-人工服务": {
       "submitted": 1,
-      "end_to_end_passes": 1,
-      "end_to_end_pass_rate": 1.0
+      "end_to_end_passes": 0,
+      "end_to_end_pass_rate": 0.0
     },
     "边界-安装服务": {
       "submitted": 1,
@@ -86,8 +84,8 @@
     },
     "边界-线下服务": {
       "submitted": 1,
-      "end_to_end_passes": 0,
-      "end_to_end_pass_rate": 0.0
+      "end_to_end_passes": 1,
+      "end_to_end_pass_rate": 1.0
     },
     "边界-维修": {
       "submitted": 1,
@@ -96,15 +94,15 @@
     }
   },
   "latency_metrics": {
-    "sample_count": 0,
-    "average_ms": null,
-    "p50_ms": null,
-    "p95_ms": null,
-    "max_ms": null
+    "sample_count": 30,
+    "average_ms": 9762,
+    "p50_ms": 8740,
+    "p95_ms": 15754,
+    "max_ms": 27689
   },
   "collection_diagnostics": {
     "encoding_repaired_answers": 0,
-    "answers_with_stripped_thought_events": 0,
-    "thought_events_stripped_total": 0
+    "answers_with_stripped_thought_events": 1,
+    "thought_events_stripped_total": 63
   }
 }

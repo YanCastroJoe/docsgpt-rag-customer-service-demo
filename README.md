@@ -33,7 +33,9 @@
 - 创建并发布专属 Agent，将 Agent 与知识库 Source 绑定。
 - 验证 RAG 问答链路：用户问题 -> 知识库检索 -> Sources 展示 -> 回答生成。
 - 定位并修复一次真实 RAG 问题：检索结果已召回，但自定义 Prompt 未注入文档上下文，导致生成阶段未采纳 Sources。
-- 新增 30 条离线评测集与可复跑评分脚本，覆盖知识命中、来源引用与知识边界拒答；结果只在导入真实 Agent 回答后生成。
+- 设计 30 条固定回归集，覆盖知识命中、来源文件、知识边界拒答与无依据扩写检查。
+- 编写真实 API 批量运行、断点续跑、离线评分、失败分类与多版本对比脚本，记录逐条会话、来源、延迟和采集异常。
+- 基于失败样本迭代 FAQ、V2 与边界增强 V3；所有指标均来自 DocsGPT 真实回答，不生成模拟答案。
 
 ## 项目结构
 
@@ -52,14 +54,17 @@
 │   ├── 02_agent_config.png
 │   └── 03_rag_answer.png
 ├── tests/
-│   └── demo_test_questions.md
+│   ├── demo_test_questions.md
+│   └── test_evaluation.py
 ├── evaluation/
 │   ├── test_cases.json
+│   ├── run_manifest.json
 │   └── README.md
 ├── scripts/
 │   ├── evaluate_rag.py
 │   ├── compare_rag_runs.py
-│   └── export_docsgpt_evaluation.py
+│   ├── export_docsgpt_evaluation.py
+│   └── run_docsgpt_evaluation.py
 ├── RUNBOOK.md
 ├── TROUBLESHOOTING.md
 └── PROJECT_SUMMARY.md
@@ -72,7 +77,7 @@
 - 售后政策：退换货规则、质量问题处理、运费承担、退款时效。
 - 会员与商品规则：会员权益、积分规则、发货物流、价格保护。
 - FAQ：客服高频问答。
-- RAG 精简版：将高频问题整理成更适合检索召回的问答结构。
+- RAG 精简版：将高频问题整理成问答结构；当前版本补齐缺失政策，并增加“不得使用外部常识扩写”的知识边界规则。
 
 ## 复现方式
 
@@ -102,46 +107,54 @@
 
 ## 可复跑评测
 
-仓库提供 `evaluation/test_cases.json`，包含 30 条客服问题：24 条知识命中题与 6 条知识边界题。`scripts/evaluate_rag.py` 不会调用模型，也不会生成模拟答案；它只对从 DocsGPT 页面或 API 导出的真实回答进行关键条件、来源引用与拒答行为评分。
+仓库提供 `evaluation/test_cases.json`，包含 30 条客服问题：24 条知识命中题与 6 条知识边界题。`scripts/evaluate_rag.py` 不会调用模型，也不会生成模拟答案；它只对真实回答进行关键条件、来源文件、拒答行为和无依据扩写检查。
 
 ```powershell
 # 校验评测集
 python scripts/evaluate_rag.py --validate-only
 
-# 生成真实回答填写模板
-python scripts/evaluate_rag.py --init-template evaluation/responses/run_2026xxxx.jsonl
+# 通过本地 Agent API 运行真实评测；密钥只从环境变量读取，不写入文件
+$env:DOCSGPT_AGENT_API_KEY = "<本地 Agent API Key>"
+python scripts/run_docsgpt_evaluation.py `
+  --out evaluation/responses/run_2026xxxx.jsonl
 
-# 导入真实回答后生成报告
+# 对真实回答生成报告
 python scripts/evaluate_rag.py `
   --responses evaluation/responses/run_2026xxxx.jsonl `
   --out evaluation/reports/run_2026xxxx.md `
   --summary-json evaluation/reports/run_2026xxxx.summary.json
 ```
 
-可使用 `scripts/compare_rag_runs.py` 比较原始文档与 FAQ 化知识库两轮真实评测。完整字段说明与结果解释见 [evaluation/README.md](evaluation/README.md)。在未导入完整真实回答前，本项目不声明准确率、引用命中率或拒答率。
+运行脚本为每条问题新建隐藏会话，避免上下文串扰，并在每条完成后立即落盘，支持中断后续跑。完整字段说明与结果解释见 [evaluation/README.md](evaluation/README.md)。
 
-## 真实评测结果（2026-07-21）
+## 四版本真实评测结果
 
-在同一 30 条用例下，分别运行“原始三文档知识库”的普通聊天和绑定 `customer_service_rag_optimized.md` 的 Classic Agent。两轮均提交 30/30 条真实回答，完整结果可在 [`evaluation/reports/`](evaluation/reports/) 复跑。
+四轮均使用同一 30 条固定用例并提交 30/30 条真实回答。2026-07-21 的历史回答已使用 1.1 版评分口径重新计算；V2 与 V3 于 2026-08-07 全量运行。配置和结果文件见 [`evaluation/run_manifest.json`](evaluation/run_manifest.json) 与 [`evaluation/reports/`](evaluation/reports/)。
 
-| 指标 | 原始三文档 | FAQ 化精简版 | 变化 |
-| --- | ---: | ---: | ---: |
-| 回答完整通过率 | 90.0% | 93.3% | +3.3 pct |
-| 必答条件覆盖率 | 91.7% | 96.7% | +5.0 pct |
-| 来源引用命中率 | 100.0% | 91.7% | -8.3 pct |
-| 知识边界拒答率 | 66.7% | 100.0% | +33.3 pct |
+| 指标 | 原始三文档 | FAQ 精简版 | FAQ-V2 | 边界增强 V3 |
+| --- | ---: | ---: | ---: | ---: |
+| 回答完整通过率 | 93.3% | 93.3% | 96.7% | 100.0% |
+| 必答条件覆盖率 | 95.0% | 96.7% | 100.0% | 100.0% |
+| 来源文件命中率 | 100.0% | 100.0% | 100.0% | 100.0% |
+| 知识边界拒答率 | 83.3% | 100.0% | 83.3% | 100.0% |
+| 端到端通过率 | 93.3% | 93.3% | 96.7% | 100.0% |
 
-结论不是“精简一定更好”：FAQ 化文档显著改善了知识边界处理，但精简版漏掉了“同款缺货处理”和“纸质发票退回”两类政策，导致对应必答题转人工。该缺口已记录为下一轮知识库补齐项，而不是被隐藏在平均分中。
+完整四版本对比见 [`four-version-comparison-2026-08-07.md`](evaluation/reports/four-version-comparison-2026-08-07.md)。这里的 100% 仅表示该固定 30 条小规模回归集的一次真实运行全部通过，不能外推为生产准确率。
 
 ## 项目复盘
 
-## V2 定向回归验证（2026-07-21）
+### 1. 检索正确不等于回答正确
 
-针对上一轮评测中暴露的“换货同款缺货”和“退货纸质发票”两项知识缺口，已补齐 FAQ 化知识库并在 DocsGPT 中创建独立的 V2 Source 与 V2 Agent。两条真实对话均回答正确且命中对应 Sources，详见 [V2 定向回归报告](evaluation/reports/v2-regression-2026-07-21.md)。
+最初自定义 Prompt 后，页面能显示正确 Sources，但模型仍提示“知识库中未找到相关信息”。接口测试确认检索层已召回片段，根因是自定义 Prompt 未包含默认模板的文档上下文变量。切回默认 RAG Prompt 后恢复正常。
 
-该回归结果为 **2/2 通过**，用于证明已知缺口已修复；它不替代前述 30 条用例的全量指标，也不将 V2 表述为“全量 100%”。
+### 2. FAQ 精简会引入知识覆盖缺口
 
-本项目的一个关键排查点是：最初自定义 Prompt 后，页面能显示正确 Sources，但模型回答仍提示“知识库中未找到相关信息”。通过接口测试发现，检索层已经召回正确片段，但自定义 Prompt 没有包含 DocsGPT 默认模板中的文档上下文变量，导致生成阶段无法读取检索结果。最终切回默认 RAG Prompt 后，问答结果恢复正常。
+FAQ 精简版暴露出“同款缺货处理”和“纸质发票退回”两项政策缺失。V2 补齐后，24 条知识命中题全部通过；但全量回归又发现人工客服服务时间题出现“先拒答、再按行业常识猜测”的边界泄漏。
 
-这个问题体现了 RAG 系统中“检索正确不等于最终回答正确”，需要同时关注数据组织、召回效果、Prompt 模板和生成链路。
+### 3. 边界规则需要同时约束拒答与扩写
 
+V3 将未知场景、统一拒答模板和“禁止行业常识补充”写入知识库，并新建独立 Source 与 Agent。定向回归通过后再次执行 30 条全量回归，端到端通过率由 96.7% 提升至 100%，知识边界拒答率由 83.3% 提升至 100%。
+
+### 4. 运行与采集也需要监控
+
+V3 的 30 条运行平均延迟为 8.8 秒，P50 为 8.4 秒，P95 为 13.6 秒。V2 运行中还捕获过一次序列化 `thought` 事件混入回答，采集脚本仅剥离格式明确的前缀事件并记录数量，避免把传输异常误判成知识质量问题。
