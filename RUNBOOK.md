@@ -47,6 +47,22 @@ $b = New-Object byte[] 32
 docker compose --env-file .\.env -f .\deployment\docker-compose-hub.yaml pull
 ```
 
+## 5.1 使用本仓库一键启动脚本
+
+如果已经完成上述首次配置，可回到本 Demo 仓库运行：
+
+```powershell
+.\start-demo.ps1 -DocsGPTPath "E:\codex\DocsGPT"
+```
+
+脚本会自动按依赖顺序启动容器并等待前后端就绪。面试前可执行：
+
+```powershell
+.\check-demo.ps1 -DocsGPTPath "E:\codex\DocsGPT"
+```
+
+看到 `[PASS]` 后再打开页面演示。路径仅为示例，可替换为实际 DocsGPT 目录，或通过 `DOCSGPT_HOME` 环境变量配置。
+
 ## 6. 推荐启动顺序
 
 为避免数据库迁移并发冲突，建议先启动数据库和缓存：

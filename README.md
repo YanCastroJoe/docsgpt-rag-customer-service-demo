@@ -83,6 +83,14 @@
 
 详细步骤见 [RUNBOOK.md](RUNBOOK.md)。
 
+如果本机已经准备好 DocsGPT 官方源码目录和 `.env`，可直接运行：
+
+```powershell
+.\start-demo.ps1 -DocsGPTPath "E:\codex\DocsGPT"
+```
+
+再执行 `.\check-demo.ps1 -DocsGPTPath "E:\codex\DocsGPT"`；看到 `[PASS]` 后，按 [三分钟面试演示手册](DEMO.md) 展示 V3 Agent 的可追溯回答与知识边界拒答。
+
 简要流程：
 
 1. 安装 Docker Desktop 与 WSL。
