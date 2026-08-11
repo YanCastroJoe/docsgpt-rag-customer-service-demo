@@ -3,6 +3,12 @@ Thumbs.db
 *.log
 *.tmp
 *.zip
+deployment/server/.env
+deployment/server/.database-restored
+deployment/server/.shared-agent-token
+deployment/server/data/
+deployment/server/*.dump
+deployment/server/migration/
 __pycache__/
 .venv/
 node_modules/

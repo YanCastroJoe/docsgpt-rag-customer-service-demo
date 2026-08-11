@@ -6,6 +6,14 @@
 
 本仓库不是 DocsGPT 源码的二次发布，而是一次面向实习求职展示的复现与应用实践记录，重点展示从部署、知识库构建、Agent 配置到问答验证的完整闭环。
 
+## 在线演示
+
+- [直接打开企业知识库客服助手 V3](http://124.221.243.125:5173/agents/shared/0676a9387f64b1bb46e1d1a0b24c418db04634f92c47ea6c)
+- 推荐问题：`质量问题退货运费谁承担？普通快递最高报销多少？请直接回答并给出来源。`
+- 边界问题：`离我最近的线下维修门店在哪？`
+
+公网实例运行在 2 核 4GB 的面试演示服务器上，使用预置知识库且关闭在线解析 Worker；它用于低频演示，不代表生产容量或可用性承诺。
+
 ## Demo 效果
 
 ### 1. 知识库 Source 管理
@@ -18,7 +26,7 @@
 
 ![Agent 配置](screenshots/02_agent_config.png)
 
-创建 `企业知识库客服助手`，绑定企业客服知识库 Source，并使用 DocsGPT 默认 RAG Prompt。
+创建 `企业知识库客服助手_V3`，绑定企业客服知识库 Source，并使用知识边界约束 Prompt 与混合召回。
 
 ### 3. RAG 问答效果
 
@@ -33,6 +41,8 @@
 - 创建并发布专属 Agent，将 Agent 与知识库 Source 绑定。
 - 验证 RAG 问答链路：用户问题 -> 知识库检索 -> Sources 展示 -> 回答生成。
 - 定位并修复一次真实 RAG 问题：检索结果已召回，但自定义 Prompt 未注入文档上下文，导致生成阶段未采纳 Sources。
+- 针对英文向量模型在中文售后问题上的错误排序，增加 FAISS 中文关键词排序并与向量检索做 RRF 融合；同时绑定强制知识边界 Prompt，将公网演示召回窗口调为 8 条。
+- 修复共享 Agent 接口遗漏 `extra_source_ids` 的兼容问题，确保全新浏览器和容器重启后仍能加载知识库，而不是依赖前端缓存。
 - 设计 30 条固定回归集，覆盖知识命中、来源文件、知识边界拒答与无依据扩写检查。
 - 编写真实 API 批量运行、断点续跑、离线评分、失败分类与多版本对比脚本，记录逐条会话、来源、延迟和采集异常。
 - 基于失败样本迭代 FAQ、V2 与边界增强 V3；所有指标均来自 DocsGPT 真实回答，不生成模拟答案。
@@ -65,6 +75,11 @@
 │   ├── compare_rag_runs.py
 │   ├── export_docsgpt_evaluation.py
 │   └── run_docsgpt_evaluation.py
+├── deployment/server/
+│   ├── docker-compose.public.yml
+│   ├── configure-public-agent.sql
+│   ├── check-public-demos.sh
+│   └── overrides/                 # FAISS 中文关键词混合召回补丁
 ├── RUNBOOK.md
 ├── TROUBLESHOOTING.md
 └── PROJECT_SUMMARY.md
@@ -154,6 +169,8 @@ python scripts/evaluate_rag.py `
 ### 1. 检索正确不等于回答正确
 
 最初自定义 Prompt 后，页面能显示正确 Sources，但模型仍提示“知识库中未找到相关信息”。接口测试确认检索层已召回片段，根因是自定义 Prompt 未包含默认模板的文档上下文变量。切回默认 RAG Prompt 后恢复正常。
+
+公网部署后又发现英文向量模型对中文查询排序不稳定：目标政策片段一度排在第 6，前 4 条召回无法覆盖答案。项目为 FAISS 增加中文关键词排序并与向量结果融合，同时扩大这个 12 片段小知识库的最终召回窗口；随后重新验证正确问答、文件来源和知识边界拒答。
 
 ### 2. FAQ 精简会引入知识覆盖缺口
 
