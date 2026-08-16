@@ -1,0 +1,116 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        PUBLIC_API_URL: ${PUBLIC_API_URL}
+    image: docsgpt-demo-frontend:optimized
+    container_name: docsgpt-demo-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    depends_on:
+      backend:
+        condition: service_started
+    mem_limit: 896m
+    cpus: 0.75
+    pids_limit: 128
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:5173/"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  backend:
+    build:
+      context: ./overrides
+      dockerfile: Dockerfile
+    container_name: docsgpt-demo-backend
+    restart: unless-stopped
+    environment:
+      LLM_PROVIDER: docsgpt
+      INTERNAL_KEY: ${INTERNAL_KEY}
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      CACHE_REDIS_URL: redis://redis:6379/2
+      POSTGRES_URI: postgresql://docsgpt:${POSTGRES_PASSWORD}@postgres:5432/docsgpt
+    ports:
+      - "7091:7091"
+    volumes:
+      - ./data/indexes:/app/indexes
+      - ./data/inputs:/app/inputs
+      - ./data/vectors:/app/vectors
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    mem_limit: 1600m
+    cpus: 1.20
+    pids_limit: 256
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    image: redis:6-alpine
+    container_name: docsgpt-demo-redis
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "96mb", "--maxmemory-policy", "allkeys-lru"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    mem_limit: 128m
+    cpus: 0.20
+    pids_limit: 64
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: docsgpt-demo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: docsgpt
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: docsgpt
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docsgpt -d docsgpt"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 384m
+    cpus: 0.35
+    pids_limit: 96
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  postgres_data:

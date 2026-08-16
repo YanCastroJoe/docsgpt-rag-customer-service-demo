@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "evaluation_set": "evaluation/test_cases.json",
+  "scoring_schema": "1.1",
+  "runs": [
+    {
+      "label": "原始三文档",
+      "captured_at": "2026-07-21",
+      "knowledge_base": [
+        "knowledge_base/customer_service_after_sales_policy.md",
+        "knowledge_base/customer_service_product_membership.md",
+        "knowledge_base/customer_service_faq.md"
+      ],
+      "responses": "evaluation/responses/raw-2026-07-21.jsonl",
+      "summary": "evaluation/reports/raw-2026-07-21.summary.json"
+    },
+    {
+      "label": "FAQ精简版",
+      "captured_at": "2026-07-21",
+      "knowledge_base_revision": "a4c885a:knowledge_base/customer_service_rag_optimized.md",
+      "responses": "evaluation/responses/optimized-2026-07-21.jsonl",
+      "summary": "evaluation/reports/optimized-2026-07-21.summary.json"
+    },
+    {
+      "label": "FAQ-V2",
+      "captured_at": "2026-08-07",
+      "source_name": "星禾优选客服知识库_RAG精简版_V2",
+      "agent_id": "d66578c3-6a91-466d-8f21-6de3f275f61b",
+      "responses": "evaluation/responses/v2-2026-08-07.jsonl",
+      "summary": "evaluation/reports/v2-2026-08-07.summary.json"
+    },
+    {
+      "label": "边界增强V3",
+      "captured_at": "2026-08-07",
+      "knowledge_base": "knowledge_base/customer_service_rag_optimized.md",
+      "source_name": "星禾优选客服知识库_RAG精简版_V3_边界增强",
+      "agent_id": "23d42c6b-bba6-4baa-ba87-aef53df8a0ae",
+      "responses": "evaluation/responses/v3-2026-08-07.jsonl",
+      "summary": "evaluation/reports/v3-2026-08-07.summary.json"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "cases_file": "evaluation/test_cases.json",
   "responses_file": "evaluation/responses/optimized-2026-07-21.jsonl",
   "total_cases": 30,
@@ -9,7 +9,101 @@
   "metrics": {
     "answer_complete_pass_rate": 0.9333333333333333,
     "condition_coverage": 0.9666666666666667,
-    "source_citation_hit_rate": 0.9166666666666666,
-    "abstention_pass_rate": 1.0
+    "source_citation_hit_rate": 1.0,
+    "abstention_pass_rate": 1.0,
+    "end_to_end_pass_rate": 0.9333333333333333
+  },
+  "failure_counts": {
+    "answer_condition_miss": 2,
+    "unexpected_abstention": 2
+  },
+  "category_metrics": {
+    "价保": {
+      "submitted": 2,
+      "end_to_end_passes": 2,
+      "end_to_end_pass_rate": 1.0
+    },
+    "会员": {
+      "submitted": 4,
+      "end_to_end_passes": 4,
+      "end_to_end_pass_rate": 1.0
+    },
+    "售后-发票": {
+      "submitted": 1,
+      "end_to_end_passes": 0,
+      "end_to_end_pass_rate": 0.0
+    },
+    "售后-换货": {
+      "submitted": 1,
+      "end_to_end_passes": 0,
+      "end_to_end_pass_rate": 0.0
+    },
+    "售后-物流": {
+      "submitted": 1,
+      "end_to_end_passes": 1,
+      "end_to_end_pass_rate": 1.0
+    },
+    "售后-质量问题": {
+      "submitted": 3,
+      "end_to_end_passes": 3,
+      "end_to_end_pass_rate": 1.0
+    },
+    "售后-退款": {
+      "submitted": 4,
+      "end_to_end_passes": 4,
+      "end_to_end_pass_rate": 1.0
+    },
+    "售后-非质量问题": {
+      "submitted": 2,
+      "end_to_end_passes": 2,
+      "end_to_end_pass_rate": 1.0
+    },
+    "物流": {
+      "submitted": 3,
+      "end_to_end_passes": 3,
+      "end_to_end_pass_rate": 1.0
+    },
+    "积分": {
+      "submitted": 3,
+      "end_to_end_passes": 3,
+      "end_to_end_pass_rate": 1.0
+    },
+    "边界-人工服务": {
+      "submitted": 1,
+      "end_to_end_passes": 1,
+      "end_to_end_pass_rate": 1.0
+    },
+    "边界-安装服务": {
+      "submitted": 1,
+      "end_to_end_passes": 1,
+      "end_to_end_pass_rate": 1.0
+    },
+    "边界-海外服务": {
+      "submitted": 2,
+      "end_to_end_passes": 2,
+      "end_to_end_pass_rate": 1.0
+    },
+    "边界-线下服务": {
+      "submitted": 1,
+      "end_to_end_passes": 1,
+      "end_to_end_pass_rate": 1.0
+    },
+    "边界-维修": {
+      "submitted": 1,
+      "end_to_end_passes": 1,
+      "end_to_end_pass_rate": 1.0
+    }
+  },
+  "latency_metrics": {
+    "sample_count": 0,
+    "average_ms": null,
+    "p50_ms": null,
+    "p95_ms": null,
+    "max_ms": null
+  },
+  "collection_diagnostics": {
+    "encoding_repaired_answers": 0,
+    "answers_with_stripped_thought_events": 0,
+    "thought_events_stripped_total": 0
   }
 }
