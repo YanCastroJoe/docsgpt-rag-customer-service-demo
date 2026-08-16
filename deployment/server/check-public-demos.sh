@@ -21,6 +21,37 @@ check_url 'DocFlow' "${docflow_url}"
 check_url 'DocsGPT API' "${docsgpt_api_url}"
 check_url 'DocsGPT frontend' "${docsgpt_frontend_url}"
 
+frontend_html="$(curl -sS --connect-timeout 5 --max-time 20 "${docsgpt_frontend_url}/")"
+if [[ "${frontend_html}" != *'/assets/'* ]] || \
+  [[ "${frontend_html}" == *'/@vite/client'* ]] || \
+  [[ "${frontend_html}" == *'/src/main.tsx'* ]]; then
+  printf '[FAIL] DocsGPT frontend is not serving the production bundle\n' >&2
+  exit 1
+fi
+printf '[PASS] DocsGPT frontend serves hashed production assets\n'
+
+if [[ -f .shared-agent-token ]]; then
+  shared_agent_token="$(tr -d '\r\n' <.shared-agent-token)"
+  shared_agent_json="$(
+    curl -sS --connect-timeout 5 --max-time 20 \
+      "http://127.0.0.1:7091/api/shared_agent?token=${shared_agent_token}"
+  )"
+  SHARED_AGENT_JSON="${shared_agent_json}" python3 - <<'PY'
+import json
+import os
+import sys
+
+agent = json.loads(os.environ["SHARED_AGENT_JSON"])
+if not agent.get("sources"):
+    print("[FAIL] Shared Agent has no multi-source bindings", file=sys.stderr)
+    raise SystemExit(1)
+if agent.get("retriever") != "hybrid" or str(agent.get("chunks")) != "8":
+    print("[FAIL] Shared Agent retrieval configuration drifted", file=sys.stderr)
+    raise SystemExit(1)
+print("[PASS] Shared Agent retains sources, hybrid retrieval and 8 chunks")
+PY
+fi
+
 for container in \
   docflow-demo \
   docsgpt-demo-frontend \
@@ -31,6 +62,11 @@ for container in \
   restarts="$(docker inspect -f '{{.RestartCount}}' "${container}")"
   if [[ "${state}" != 'running' ]]; then
     printf '[FAIL] %s state=%s restarts=%s\n' "${container}" "${state}" "${restarts}" >&2
+    exit 1
+  fi
+  health="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "${container}")"
+  if [[ "${health}" != 'none' && "${health}" != 'healthy' ]]; then
+    printf '[FAIL] %s health=%s\n' "${container}" "${health}" >&2
     exit 1
   fi
   printf '[PASS] %s state=running restarts=%s\n' "${container}" "${restarts}"

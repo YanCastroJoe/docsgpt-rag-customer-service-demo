@@ -31,8 +31,8 @@ cd "${docflow_dir}"
 docker compose -f compose.public-demo.yml up -d --build
 
 cd "${docsgpt_dir}"
-docker compose --env-file .env -f docker-compose.public.yml pull frontend redis postgres
-docker compose --env-file .env -f docker-compose.public.yml build backend
+docker compose --env-file .env -f docker-compose.public.yml pull redis postgres
+docker compose --env-file .env -f docker-compose.public.yml build backend frontend
 docker compose --env-file .env -f docker-compose.public.yml up -d postgres redis
 
 for attempt in $(seq 1 30); do

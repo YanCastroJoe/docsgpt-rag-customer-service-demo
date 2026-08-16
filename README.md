@@ -43,6 +43,9 @@
 - 定位并修复一次真实 RAG 问题：检索结果已召回，但自定义 Prompt 未注入文档上下文，导致生成阶段未采纳 Sources。
 - 针对英文向量模型在中文售后问题上的错误排序，增加 FAISS 中文关键词排序并与向量检索做 RRF 融合；同时绑定强制知识边界 Prompt，将公网演示召回窗口调为 8 条。
 - 修复共享 Agent 接口遗漏 `extra_source_ids` 的兼容问题，确保全新浏览器和容器重启后仍能加载知识库，而不是依赖前端缓存。
+- 将公网前端从 Vite 开发服务器改为 Vite 生产构建 + Nginx 静态服务，并为哈希资源设置长期缓存，降低首次加载开销。
+- 修复生产构建暴露的共享 Agent 初始化竞态：问答提交时直接从 Agent 配置构造 `active_docs`、Prompt 与 chunks，避免页面刚加载或容器重启后出现无知识库请求。
+- 在共享会话完成知识边界拒答后清空低相关 Sources，避免正确拒答仍展示无关来源卡片。
 - 设计 30 条固定回归集，覆盖知识命中、来源文件、知识边界拒答与无依据扩写检查。
 - 编写真实 API 批量运行、断点续跑、离线评分、失败分类与多版本对比脚本，记录逐条会话、来源、延迟和采集异常。
 - 基于失败样本迭代 FAQ、V2 与边界增强 V3；所有指标均来自 DocsGPT 真实回答，不生成模拟答案。
@@ -79,6 +82,7 @@
 │   ├── docker-compose.public.yml
 │   ├── configure-public-agent.sql
 │   ├── check-public-demos.sh
+│   ├── frontend/                  # 生产构建、Nginx 与拒答来源清理补丁
 │   └── overrides/                 # FAISS 中文关键词混合召回补丁
 ├── RUNBOOK.md
 ├── TROUBLESHOOTING.md

@@ -1,11 +1,13 @@
 services:
   frontend:
-    image: ghcr.nju.edu.cn/arc53/docsgpt-fe@sha256:484b16abf86ec505a37a450aa62a0bf98debdcf68a2413a6ce2cd937af2c7dc1
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        PUBLIC_API_URL: ${PUBLIC_API_URL}
+    image: docsgpt-demo-frontend:optimized
     container_name: docsgpt-demo-frontend
     restart: unless-stopped
-    environment:
-      VITE_API_HOST: ${PUBLIC_API_URL}
-      VITE_API_STREAMING: "true"
     ports:
       - "5173:5173"
     depends_on:
@@ -14,6 +16,12 @@ services:
     mem_limit: 896m
     cpus: 0.75
     pids_limit: 128
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:5173/"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
     security_opt:
       - no-new-privileges:true
     logging:
