@@ -7,51 +7,53 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <aside class="sidebar">
-      <div class="brand"><span>R</span><div><strong>RAG Ops</strong><small>DocsGPT Demo</small></div></div>
-      <nav>
-        <a class="active" href="#overview">运行概览</a>
-        <a href="#pipeline">问答链路</a>
-        <a href="#traces">评测记录</a>
-      </nav>
-      <div class="sidebar-note">
-        <strong>证据边界</strong>
-        <p>固定评测快照，不代表生产准确率或实时监控。</p>
+    <header class="topbar">
+      <div class="topbar-main">
+        <div class="brand"><span class="brand-mark">R</span><div><strong>RAG 诊断台</strong><small>DocsGPT 企业知识库</small></div></div>
+        <a class="demo-link" href="/">返回问答演示</a>
       </div>
-    </aside>
+      <nav class="view-tabs" aria-label="诊断台模块">
+        <button class="view-tab active" type="button" data-view-target="overview" aria-selected="true">运行概览</button>
+        <button class="view-tab" type="button" data-view-target="versions" aria-selected="false">版本回归</button>
+        <button class="view-tab" type="button" data-view-target="traces" aria-selected="false">单条诊断</button>
+      </nav>
+    </header>
 
     <main>
-      <header>
-        <div><small>AGENT APPS / RAG EVALUATION</small><h1>企业知识库 RAG 诊断台</h1></div>
-        <a class="demo-link" href="/">返回问答演示</a>
-      </header>
-
-      <section id="overview" class="panel hero">
-        <div><span class="eyebrow">LATEST VERIFIED RUN</span><h2 id="run-title">正在载入评测数据…</h2><p id="run-notice"></p></div>
-        <span id="run-date" class="date-pill">--</span>
-      </section>
-
-      <section class="metrics" aria-label="核心指标">
-        <article><span>端到端通过率</span><strong id="metric-e2e">--</strong><small>回答 + 来源联合判定</small></article>
-        <article><span>必答条件覆盖</span><strong id="metric-coverage">--</strong><small>规则化固定集检查</small></article>
-        <article><span>知识边界拒答</span><strong id="metric-boundary">--</strong><small>拒答且无依据扩写</small></article>
-        <article><span>P95 响应耗时</span><strong id="metric-p95">--</strong><small>真实 API 回答快照</small></article>
-      </section>
-
-      <section id="pipeline" class="panel">
-        <div class="section-heading"><div><span class="eyebrow">CONTEXT ENGINEERING</span><h2>检索与生成链路</h2></div><span class="muted">配置链路 + 评测验证</span></div>
-        <div id="pipeline-list" class="pipeline"></div>
-      </section>
-
-      <section class="grid">
+      <section class="view active" data-view="overview">
+        <div class="page-heading">
+          <div><span class="eyebrow">RAG EVALUATION / OVERVIEW</span><h1>运行质量概览</h1><p>集中查看当前固定评测快照、核心质量指标与检索生成链路。</p></div>
+          <span id="run-date" class="date-pill">--</span>
+        </div>
+        <article class="panel run-summary">
+          <div><span class="eyebrow">LATEST VERIFIED RUN</span><h2 id="run-title">正在载入评测数据…</h2><p id="run-notice"></p></div>
+          <div class="evidence-note"><strong>证据边界</strong><span>固定评测快照，不代表生产准确率或实时监控。</span></div>
+        </article>
+        <section class="metrics" aria-label="核心指标">
+          <article><span>端到端通过率</span><strong id="metric-e2e">--</strong><small>回答 + 来源联合判定</small></article>
+          <article><span>必答条件覆盖</span><strong id="metric-coverage">--</strong><small>规则化固定集检查</small></article>
+          <article><span>知识边界拒答</span><strong id="metric-boundary">--</strong><small>拒答且无依据扩写</small></article>
+          <article><span>P95 响应耗时</span><strong id="metric-p95">--</strong><small>真实 API 回答快照</small></article>
+        </section>
         <article class="panel">
-          <div class="section-heading"><div><span class="eyebrow">VERSION DIFF</span><h2>版本回归对比</h2></div></div>
+          <div class="section-heading"><div><span class="eyebrow">CONTEXT ENGINEERING</span><h2>检索与生成链路</h2></div><span class="muted">配置链路 + 评测验证</span></div>
+          <div id="pipeline-list" class="pipeline"></div>
+        </article>
+      </section>
+
+      <section class="view" data-view="versions" hidden>
+        <div class="page-heading"><div><span class="eyebrow">VERSION REGRESSION</span><h1>版本回归对比</h1><p>使用同一组30条固定用例，观察知识库与边界规则迭代后的指标变化。</p></div></div>
+        <article class="panel comparison-panel">
+          <div class="comparison-head"><span>评测版本</span><span>端到端</span><span>条件覆盖</span><span>来源命中</span><span>边界拒答</span></div>
           <div id="version-list" class="version-list"></div>
         </article>
-        <article id="traces" class="panel">
-          <div class="section-heading"><div><span class="eyebrow">EVALUATION TRACE</span><h2>单条问题诊断</h2></div></div>
-          <label class="select-label" for="trace-select">选择固定评测用例</label>
-          <select id="trace-select"></select>
+        <p class="footnote">所有比例仅代表对应固定评测快照；不同版本均提交30条真实API回答。</p>
+      </section>
+
+      <section class="view" data-view="traces" hidden>
+        <div class="page-heading"><div><span class="eyebrow">EVALUATION TRACE</span><h1>单条问题诊断</h1><p>沿“问题 - 来源 - 回答 - 规则判定”检查单条用例，不将页面记录解释为底层实时Trace。</p></div></div>
+        <article class="panel trace-panel">
+          <div class="trace-picker"><label for="trace-select">选择固定评测用例</label><select id="trace-select"></select></div>
           <div id="trace-detail" class="trace-detail"></div>
         </article>
       </section>

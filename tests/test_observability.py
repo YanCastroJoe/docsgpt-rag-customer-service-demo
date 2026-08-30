@@ -43,6 +43,14 @@ class ObservabilitySnapshotTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 observability.resolve_repo_path(root, "../outside.json")
 
+    def test_ops_page_uses_three_top_level_views_without_sidebar(self):
+        html = (ROOT / "deployment" / "server" / "frontend" / "ops" / "index.html").read_text(encoding="utf-8")
+        self.assertEqual(3, html.count("data-view-target="))
+        self.assertIn('data-view="overview"', html)
+        self.assertIn('data-view="versions"', html)
+        self.assertIn('data-view="traces"', html)
+        self.assertNotIn('class="sidebar"', html)
+
 
 if __name__ == "__main__":
     unittest.main()
