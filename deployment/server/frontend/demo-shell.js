@@ -12,15 +12,21 @@
       ['企业知识库客服助手_V3', '企业售后知识库 Agent'],
       ['DocsGPT 如何帮助您？', '请输入售后问题，例如：质量问题退货运费由谁承担？'],
       ['DocsGPT 使用 GenAI, 请使用来源审核关键信息.', '回答仅依据当前演示知识库；请通过来源核验关键信息。'],
+      ['基于FAQ精简版V3知识库的RAG客服Agent，强化知识边界拒答并禁止无依据扩写。', '面向电商售后场景，检索 FAQ 知识库并生成带来源回答；超出知识边界时明确拒答。'],
+      ['by Demo', '公开演示环境'],
     ]);
 
-    document.querySelectorAll('h1, h2, p').forEach((node) => {
+    document.querySelectorAll('h1, h2, p, div').forEach((node) => {
       const next = replacements.get(node.textContent.trim());
       if (next) node.textContent = next;
     });
 
     const input = document.querySelector('#message-input');
     if (input) input.placeholder = replacements.get('DocsGPT 如何帮助您？');
+
+    const legacyHeading = [...document.querySelectorAll('h2')]
+      .find((heading) => heading.parentElement?.className?.includes('absolute top-5'));
+    if (legacyHeading?.parentElement) legacyHeading.parentElement.dataset.ragLegacyHeading = 'true';
   };
 
   const markLayout = () => {

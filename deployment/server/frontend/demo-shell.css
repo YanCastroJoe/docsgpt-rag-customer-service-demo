@@ -46,6 +46,10 @@
   padding-top: 72px;
 }
 
+.rag-public-demo [data-rag-legacy-heading] {
+  display: none !important;
+}
+
 .rag-public-demo > .rag-ops-entry {
   display: none;
 }
