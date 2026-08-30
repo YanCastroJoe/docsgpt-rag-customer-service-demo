@@ -19,6 +19,8 @@ test('adds business identity, suggestions and diagnostics navigation', () => {
   assert.match(shell, /常用问题/);
   assert.match(shell, /href="\/ops\/"/);
   assert.match(shell, /MutationObserver/);
+  assert.match(shell, /HTMLTextAreaElement\.prototype/);
+  assert.match(shell, /new InputEvent\('input'/);
 });
 
 test('public demo hides the upstream sidebar and releases main width', () => {

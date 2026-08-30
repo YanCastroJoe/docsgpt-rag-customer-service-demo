@@ -78,8 +78,10 @@
       button.className = 'rag-suggestion';
       button.textContent = question;
       button.addEventListener('click', () => {
-        input.value = question;
-        input.dispatchEvent(new Event('input', { bubbles: true }));
+        const valueSetter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
+        valueSetter?.call(input, question);
+        input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: question }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
         input.focus();
       });
       list.append(button);
