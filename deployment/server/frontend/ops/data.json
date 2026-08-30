@@ -1,0 +1,536 @@
+{
+  "schema_version": "1.0",
+  "mode": "fixed_evaluation_snapshot",
+  "notice": "数据来自固定评测集的真实 API 回答快照，不是生产流量或实时内部 Trace。",
+  "latest_run": {
+    "label": "边界增强V3",
+    "captured_at": "2026-08-07",
+    "submitted": 30,
+    "answer_cases": 24,
+    "boundary_cases": 6,
+    "end_to_end_pass_rate": 100.0,
+    "condition_coverage": 100.0,
+    "source_hit_rate": 100.0,
+    "boundary_pass_rate": 100.0,
+    "p50_ms": 8430,
+    "p95_ms": 13596,
+    "failure_counts": {}
+  },
+  "pipeline": [
+    {
+      "key": "query",
+      "label": "用户问题",
+      "detail": "独立会话，避免上下文串扰"
+    },
+    {
+      "key": "retrieve",
+      "label": "Hybrid Retrieval",
+      "detail": "FAISS + 中文关键词 RRF"
+    },
+    {
+      "key": "context",
+      "label": "Context",
+      "detail": "Sources 与知识边界 Prompt"
+    },
+    {
+      "key": "generate",
+      "label": "LLM Answer",
+      "detail": "基于召回片段生成回答"
+    },
+    {
+      "key": "verify",
+      "label": "Rule Verifier",
+      "detail": "条件、来源、拒答与扩写检查"
+    }
+  ],
+  "runs": [
+    {
+      "label": "原始三文档",
+      "captured_at": "2026-07-21",
+      "submitted": 30,
+      "end_to_end_pass_rate": 93.3,
+      "condition_coverage": 95.0,
+      "source_hit_rate": 100.0,
+      "boundary_pass_rate": 83.3
+    },
+    {
+      "label": "FAQ精简版",
+      "captured_at": "2026-07-21",
+      "submitted": 30,
+      "end_to_end_pass_rate": 93.3,
+      "condition_coverage": 96.7,
+      "source_hit_rate": 100.0,
+      "boundary_pass_rate": 100.0
+    },
+    {
+      "label": "FAQ-V2",
+      "captured_at": "2026-08-07",
+      "submitted": 30,
+      "end_to_end_pass_rate": 96.7,
+      "condition_coverage": 100.0,
+      "source_hit_rate": 100.0,
+      "boundary_pass_rate": 83.3
+    },
+    {
+      "label": "边界增强V3",
+      "captured_at": "2026-08-07",
+      "submitted": 30,
+      "end_to_end_pass_rate": 100.0,
+      "condition_coverage": 100.0,
+      "source_hit_rate": 100.0,
+      "boundary_pass_rate": 100.0
+    }
+  ],
+  "traces": [
+    {
+      "id": "CS-001",
+      "category": "售后-质量问题",
+      "question": "质量问题退货运费谁承担？普通快递最高报销多少？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 8554,
+      "answer_excerpt": "根据您提供的知识库文档，关于质量问题退货运费及报销标准的说明如下： **1. 质量问题退货运费由谁承担？** 如果商品存在**非人为质量问题**，且用户在**签收后 15 日内**提交售后申请并**通过凭证审核**，退货、换货或维修产生的**往返运费由平台承担**。 **2. 普通快递最高报销多少？** 用户自行寄回商品时，经核实属于质量问题的，普通快递运费**最高报销 12 元**。偏远地区和大件商品需要客服单独确认运费金额。 此外…",
+      "failure_types": []
+    },
+    {
+      "id": "CS-002",
+      "category": "售后-质量问题",
+      "question": "商品有质量问题，售后申请需要在多久内提交？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 13340,
+      "answer_excerpt": "根据 **customer_service_rag_optimized.md** 中的说明，商品有质量问题时，用户需要在**签收后 15 日内**提交售后申请，并上传清晰照片、视频或检测说明。客服审核后，可根据情况引导用户选择退货、换货或维修。",
+      "failure_types": []
+    },
+    {
+      "id": "CS-003",
+      "category": "售后-质量问题",
+      "question": "质量问题售后申请要提供什么凭证？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 8221,
+      "answer_excerpt": "根据《customer_service_rag_optimized.md》，用户需要在签收后 15 日内提交售后申请，并上传**清晰照片、视频或检测说明**作为质量问题凭证。客服审核通过后，会根据情况引导退货、换货或维修。",
+      "failure_types": []
+    },
+    {
+      "id": "CS-004",
+      "category": "售后-物流",
+      "question": "质量问题寄回商品能到付吗？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 5312,
+      "answer_excerpt": "根据《customer_service_rag_optimized.md》中的“质量问题退货运费”说明： **不建议选择到付。** 若用户选择到付，仓库有权拒收。客服应提醒用户使用普通快递寄回，并保留快递单号。 同时，质量问题经核实后，用户自行寄回商品时，普通快递运费**最高可报销 12 元**（偏远地区和大件商品需单独确认运费金额）。",
+      "failure_types": []
+    },
+    {
+      "id": "CS-005",
+      "category": "售后-非质量问题",
+      "question": "不想要了退货，寄回运费由谁承担？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 5766,
+      "answer_excerpt": "非质量问题退货（如“不想要了”），寄回运费由**用户自行承担**。商品需保持外包装、配件、赠品、说明书完整，且不影响二次销售。 来源：《customer_service_rag_optimized.md》— 非质量问题退货运费",
+      "failure_types": []
+    },
+    {
+      "id": "CS-006",
+      "category": "售后-非质量问题",
+      "question": "七天无理由退货，商品需要满足什么条件？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 13223,
+      "answer_excerpt": "根据当前知识库，**非质量问题退货**对商品状态的要求为：商品需保持外包装、配件、赠品、说明书完整，不影响二次销售。（来源：customer_service_rag_optimized.md） 关于您提到的“七天无理由退货”的具体时效及完整条件，当前知识库中未找到相关信息，建议联系人工客服确认。",
+      "failure_types": []
+    },
+    {
+      "id": "CS-007",
+      "category": "售后-退款",
+      "question": "普通商品退货退款质检通常需要多久？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 5429,
+      "answer_excerpt": "根据《customer_service_rag_optimized.md》，普通商品的退货退款质检时效为 **1 到 3 个工作日**；大件商品则为 3 到 5 个工作日。质检完成后，微信或支付宝退款通常 1 到 3 个工作日到账，银行卡退款通常 3 到 7 个工作日到账。",
+      "failure_types": []
+    },
+    {
+      "id": "CS-008",
+      "category": "售后-退款",
+      "question": "大件商品退款质检要几天？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 5177,
+      "answer_excerpt": "大件商品退款质检时效为 **3 到 5 个工作日**。 来源：《customer_service_rag_optimized.md》（退款到账时效）",
+      "failure_types": []
+    },
+    {
+      "id": "CS-009",
+      "category": "售后-退款",
+      "question": "支付宝退款一般多久到账？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 11257,
+      "answer_excerpt": "根据知识库内容，**支付宝退款通常在 1 到 3 个工作日到账**，具体到账时间以支付机构处理结果为准。 *来源：《customer_service_rag_optimized.md》（退款到账时效）*",
+      "failure_types": []
+    },
+    {
+      "id": "CS-010",
+      "category": "售后-退款",
+      "question": "银行卡退款一般多久到账？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 10048,
+      "answer_excerpt": "根据《customer_service_rag_optimized.md》中的说明： **银行卡退款通常 3 到 7 个工作日到账**，具体到账时间以支付机构处理结果为准。",
+      "failure_types": []
+    },
+    {
+      "id": "CS-011",
+      "category": "物流",
+      "question": "普通商品付款后多久发货？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 5444,
+      "answer_excerpt": "根据文档《customer_service_rag_optimized.md》中“发货与物流”部分的说明： 普通商品通常在**付款后 48 小时内发货**；大促期间发货时效可能延长至 **72 小时**；预售商品则按照商品详情页标注的时间发货。",
+      "failure_types": []
+    },
+    {
+      "id": "CS-012",
+      "category": "物流",
+      "question": "大促期间发货时效会怎样？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 8512,
+      "answer_excerpt": "根据文档《customer_service_rag_optimized.md》中“发货与物流”的说明： 大促期间发货时效可能延长至 **72 小时**（普通商品通常在付款后 48 小时内发货）。",
+      "failure_types": []
+    },
+    {
+      "id": "CS-013",
+      "category": "物流",
+      "question": "物流超过48小时没更新怎么办？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 13424,
+      "answer_excerpt": "如果商品发货后物流超过 48 小时没有更新，客服应协助您登记物流异常工单，该工单通常在 1 到 2 个工作日内反馈。 来源：《customer_service_rag_optimized.md》（发货与物流）",
+      "failure_types": []
+    },
+    {
+      "id": "CS-014",
+      "category": "会员",
+      "question": "金卡会员每月可以领什么优惠券？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 8863,
+      "answer_excerpt": "根据知识库内容，金卡会员每月可领取 **2 张满 199 减 20 优惠券**，并享受**生日月 9 折券**。 *来源：customer_service_rag_optimized.md*",
+      "failure_types": []
+    },
+    {
+      "id": "CS-015",
+      "category": "会员",
+      "question": "金卡会员生日月有什么权益？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 13596,
+      "answer_excerpt": "根据文档《customer_service_rag_optimized.md》，金卡会员在生日月可享受 **9 折券**。此外，金卡会员每月还可领取 2 张满 199 减 20 的优惠券。",
+      "failure_types": []
+    },
+    {
+      "id": "CS-016",
+      "category": "会员",
+      "question": "黑金会员有什么优惠？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 5834,
+      "answer_excerpt": "根据知识库中的**会员权益**文档，黑金会员可享受以下权益： - 每月可领取 **3 张满 299 减 40 优惠券** - 享受**专属客服通道** *来源：customer\\_service\\_rag\\_optimized.md（会员权益）*",
+      "failure_types": []
+    },
+    {
+      "id": "CS-017",
+      "category": "会员",
+      "question": "黑金会员有专属客服吗？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 4856,
+      "answer_excerpt": "是的，黑金会员享有**专属客服通道**。 来源：**customer_service_rag_optimized.md**（会员权益）",
+      "failure_types": []
+    },
+    {
+      "id": "CS-018",
+      "category": "积分",
+      "question": "积分可以提现吗？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 7662,
+      "answer_excerpt": "根据知识库文档 **customer_service_rag_optimized.md** 中的说明： **积分不可提现。** 积分可在积分商城兑换优惠券和礼品。100 积分可抵扣 1 元，但单笔订单最多抵扣实付金额的 20%。",
+      "failure_types": []
+    },
+    {
+      "id": "CS-019",
+      "category": "积分",
+      "question": "积分怎么抵扣订单金额？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 11129,
+      "answer_excerpt": "根据《customer_service_rag_optimized.md》中的**积分规则**： - **100 积分可抵扣 1 元**； - **单笔订单最多抵扣实付金额的 20%**。 此外，积分可在积分商城兑换优惠券和礼品，但**不可提现**。",
+      "failure_types": []
+    },
+    {
+      "id": "CS-020",
+      "category": "积分",
+      "question": "退款后积分会返还还是扣回？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 9043,
+      "answer_excerpt": "根据知识库中的**积分规则**说明： 退款订单对应的积分会**扣回**。 > 来源：`customer_service_rag_optimized.md` — 积分规则",
+      "failure_types": []
+    },
+    {
+      "id": "CS-021",
+      "category": "价保",
+      "question": "签收后降价可以申请价格保护吗？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 11583,
+      "answer_excerpt": "可以。根据《customer_service_rag_optimized.md》中“价格保护”的说明： 用户在商品签收后 **7 日内**发现同一商品同规格出现**官方降价**，可以申请价格保护。 不过需要注意，**秒杀、限时抢购、会员专属价以及优惠券差额不计入价保范围**。",
+      "failure_types": []
+    },
+    {
+      "id": "CS-022",
+      "category": "价保",
+      "question": "秒杀价和会员专属价可以价保吗？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 6935,
+      "answer_excerpt": "根据《customer_service_rag_optimized.md》中的**价格保护**说明，**秒杀价和会员专属价不可以申请价格保护**。 文档明确指出：秒杀、限时抢购、会员专属价、优惠券差额不计入价保范围。",
+      "failure_types": []
+    },
+    {
+      "id": "CS-023",
+      "category": "售后-换货",
+      "question": "换货时同款商品缺货怎么办？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 7571,
+      "answer_excerpt": "根据知识库内容，若仓库质检完成后同款商品缺货，客服应向用户提供**退款**或**更换同价商品**两种方案，由用户确认后处理。 来源：《customer_service_rag_optimized.md》——换货缺货处理",
+      "failure_types": []
+    },
+    {
+      "id": "CS-024",
+      "category": "售后-发票",
+      "question": "退货时纸质发票怎么处理？",
+      "expected_behavior": "answer",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 5554,
+      "answer_excerpt": "根据知识库中的说明，已开具**纸质发票**的订单，退货时需要将**发票随商品一并寄回**；如果是电子发票，则会在退款完成后自动冲红。 *来源：《customer_service_rag_optimized.md》（发票处理）*",
+      "failure_types": []
+    },
+    {
+      "id": "CS-025",
+      "category": "边界-海外服务",
+      "question": "海外退货运费最高能报销多少？",
+      "expected_behavior": "abstain",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 8693,
+      "answer_excerpt": "当前知识库中未找到相关信息，建议联系人工客服确认。 （来源：知识库无答案时的处理）",
+      "failure_types": []
+    },
+    {
+      "id": "CS-026",
+      "category": "边界-海外服务",
+      "question": "国际快递退货可以提现吗？",
+      "expected_behavior": "abstain",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 17092,
+      "answer_excerpt": "关于**国际快递退货**（属于海外退货范畴），当前知识库中未找到相关信息，建议联系人工客服确认。 知识库中关于“提现”仅明确以下内容： **积分不可提现**，积分可在积分商城兑换优惠券和礼品（《customer_service_rag_optimized.md》）。如果您询问的是其他提现或退款到账方式，当前知识库未提供相关说明。",
+      "failure_types": []
+    },
+    {
+      "id": "CS-027",
+      "category": "边界-维修",
+      "question": "所有商品都有永久免费维修吗？",
+      "expected_behavior": "abstain",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 8430,
+      "answer_excerpt": "当前知识库中未找到相关信息，建议联系人工客服确认。 （依据《知识库无答案时的处理》：对于“永久免费维修”等知识库没有明确说明的问题，需使用统一模板回复，不得依据外部常识进行推测。）",
+      "failure_types": []
+    },
+    {
+      "id": "CS-028",
+      "category": "边界-线下服务",
+      "question": "离我最近的线下维修门店在哪？",
+      "expected_behavior": "abstain",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 8333,
+      "answer_excerpt": "当前知识库中未找到相关信息，建议联系人工客服确认。",
+      "failure_types": []
+    },
+    {
+      "id": "CS-029",
+      "category": "边界-人工服务",
+      "question": "人工客服是否提供24小时服务？",
+      "expected_behavior": "abstain",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 9905,
+      "answer_excerpt": "当前知识库中未找到相关信息，建议联系人工客服确认。",
+      "failure_types": []
+    },
+    {
+      "id": "CS-030",
+      "category": "边界-安装服务",
+      "question": "小家电送货上门后免费安装吗？",
+      "expected_behavior": "abstain",
+      "overall_pass": true,
+      "condition_coverage": 100.0,
+      "source_pass": true,
+      "sources": [
+        "customer_service_rag_optimized.md"
+      ],
+      "latency_ms": 6410,
+      "answer_excerpt": "当前知识库中未找到相关信息，建议联系人工客服确认。 *来源：《customer_service_rag_optimized.md》——“知识库无答案时的处理”*",
+      "failure_types": []
+    }
+  ]
+}

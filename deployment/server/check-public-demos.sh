@@ -4,6 +4,7 @@ set -euo pipefail
 docflow_url='http://127.0.0.1:8010'
 docsgpt_api_url='http://127.0.0.1:7091/api/health'
 docsgpt_frontend_url='http://127.0.0.1:5173'
+docsgpt_ops_url='http://127.0.0.1:5173/ops/'
 
 check_url() {
   local name="$1"
@@ -20,6 +21,7 @@ check_url() {
 check_url 'DocFlow' "${docflow_url}"
 check_url 'DocsGPT API' "${docsgpt_api_url}"
 check_url 'DocsGPT frontend' "${docsgpt_frontend_url}"
+check_url 'DocsGPT RAG Ops' "${docsgpt_ops_url}"
 
 frontend_html="$(curl -sS --connect-timeout 5 --max-time 20 "${docsgpt_frontend_url}/")"
 if [[ "${frontend_html}" != *'/assets/'* ]] || \
@@ -29,6 +31,15 @@ if [[ "${frontend_html}" != *'/assets/'* ]] || \
   exit 1
 fi
 printf '[PASS] DocsGPT frontend serves hashed production assets\n'
+
+ops_html="$(curl -sS --connect-timeout 5 --max-time 20 "${docsgpt_ops_url}")"
+ops_data="$(curl -sS --connect-timeout 5 --max-time 20 "${docsgpt_ops_url}data.json")"
+if [[ "${ops_html}" != *'企业知识库 RAG 诊断台'* ]] || \
+  [[ "${ops_data}" != *'fixed_evaluation_snapshot'* ]]; then
+  printf '[FAIL] DocsGPT RAG Ops assets are incomplete\n' >&2
+  exit 1
+fi
+printf '[PASS] DocsGPT RAG Ops serves the verified evaluation snapshot\n'
 
 if [[ -f .shared-agent-token ]]; then
   shared_agent_token="$(tr -d '\r\n' <.shared-agent-token)"
