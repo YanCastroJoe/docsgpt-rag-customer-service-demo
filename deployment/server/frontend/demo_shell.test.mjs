@@ -15,6 +15,7 @@ test('adds business identity, suggestions and diagnostics navigation', () => {
   assert.match(shell, /企业售后知识库 Agent/);
   assert.match(shell, /公开演示环境/);
   assert.match(shell, /dataset\.ragLegacyHeading/);
+  assert.match(shell, /node\.children\.length === 0/);
   assert.match(shell, /常用问题/);
   assert.match(shell, /href="\/ops\/"/);
   assert.match(shell, /MutationObserver/);

@@ -18,7 +18,7 @@
 
     document.querySelectorAll('h1, h2, p, div').forEach((node) => {
       const next = replacements.get(node.textContent.trim());
-      if (next) node.textContent = next;
+      if (next && node.children.length === 0) node.textContent = next;
     });
 
     const input = document.querySelector('#message-input');
