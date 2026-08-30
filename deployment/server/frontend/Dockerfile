@@ -14,5 +14,6 @@ COPY nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY ops /usr/share/nginx/html/ops
 COPY demo-shell.css /usr/share/nginx/html/demo-shell.css
+COPY demo-shell.js /usr/share/nginx/html/demo-shell.js
 
 EXPOSE 5173
