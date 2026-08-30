@@ -1,0 +1,39 @@
+.rag-ops-entry {
+  position: fixed;
+  z-index: 9999;
+  top: 18px;
+  right: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 15px;
+  border: 1px solid #d8dbea;
+  border-radius: 11px;
+  color: #30374b;
+  background: rgba(255,255,255,.96);
+  box-shadow: 0 8px 24px rgba(24,32,51,.10);
+  font: 700 14px/1 Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  text-decoration: none;
+  backdrop-filter: blur(10px);
+}
+
+.rag-ops-entry span {
+  padding: 4px 6px;
+  border-radius: 6px;
+  color: #544de0;
+  background: #eeeeff;
+  font-size: 10px;
+  letter-spacing: .06em;
+}
+
+.rag-ops-entry:hover {
+  border-color: #8d89ee;
+  color: #4f46d8;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 700px) {
+  .rag-ops-entry { top: 12px; right: 12px; min-height: 38px; padding: 0 12px; font-size: 12px; }
+  .rag-ops-entry span { display: none; }
+}

@@ -10,8 +10,9 @@ RUN node /tmp/patch_abstain_sources.mjs /app/src \
 
 FROM nginx:1.27.5-alpine
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY ops /usr/share/nginx/html/ops
+COPY demo-shell.css /usr/share/nginx/html/demo-shell.css
 
 EXPOSE 5173

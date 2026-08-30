@@ -25,6 +25,17 @@ if [[ ! -f "${docsgpt_dir}/.env" ]]; then
   } >"${docsgpt_dir}/.env"
 fi
 
+if [[ ! -f "${docsgpt_dir}/.shared-agent-token" ]]; then
+  umask 077
+  openssl rand -hex 24 >"${docsgpt_dir}/.shared-agent-token"
+fi
+shared_agent_token="$(tr -d '\r\n' <"${docsgpt_dir}/.shared-agent-token")"
+if grep -q '^SHARED_AGENT_TOKEN=' "${docsgpt_dir}/.env"; then
+  sed -i "s/^SHARED_AGENT_TOKEN=.*/SHARED_AGENT_TOKEN=${shared_agent_token}/" "${docsgpt_dir}/.env"
+else
+  printf 'SHARED_AGENT_TOKEN=%s\n' "${shared_agent_token}" >>"${docsgpt_dir}/.env"
+fi
+
 sudo chown -R ubuntu:ubuntu "${base_dir}"
 
 cd "${docflow_dir}"
@@ -59,11 +70,6 @@ docker cp configure-public-agent.sql docsgpt-demo-postgres:/tmp/configure-public
 docker compose --env-file .env -f docker-compose.public.yml exec -T postgres \
   psql -U docsgpt -d docsgpt -f /tmp/configure-public-agent.sql
 
-if [[ ! -f .shared-agent-token ]]; then
-  umask 077
-  openssl rand -hex 24 >.shared-agent-token
-fi
-shared_agent_token="$(tr -d '\r\n' <.shared-agent-token)"
 docker compose --env-file .env -f docker-compose.public.yml exec -T postgres \
   psql -U docsgpt -d docsgpt -v ON_ERROR_STOP=1 \
   -c "UPDATE agents SET shared = true, shared_token = '${shared_agent_token}', shared_metadata = jsonb_build_object('shared_by', 'Demo', 'purpose', 'interview_demo') WHERE id = '23d42c6b-bba6-4baa-ba87-aef53df8a0ae';"
@@ -73,7 +79,8 @@ docker compose --env-file .env -f docker-compose.public.yml up -d --no-build bac
 sudo chown ubuntu:ubuntu .database-restored .shared-agent-token .env
 
 printf 'DOCFLOW_URL=http://124.221.243.125:8010\n'
-printf 'DOCSGPT_URL=http://124.221.243.125:5173/shared/agent/%s\n' "${shared_agent_token}"
+printf 'DOCSGPT_URL=http://124.221.243.125:5173/demo\n'
+printf 'DOCSGPT_OPS_URL=http://124.221.243.125:5173/ops/\n'
 docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
 free -h
 df -h /

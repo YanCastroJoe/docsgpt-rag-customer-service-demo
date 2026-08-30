@@ -51,6 +51,15 @@ class ObservabilitySnapshotTests(unittest.TestCase):
         self.assertIn('data-view="traces"', html)
         self.assertNotIn('class="sidebar"', html)
 
+    def test_user_demo_and_ops_console_link_to_each_other(self):
+        frontend = ROOT / "deployment" / "server" / "frontend"
+        ops_html = (frontend / "ops" / "index.html").read_text(encoding="utf-8")
+        nginx = (frontend / "nginx.conf").read_text(encoding="utf-8")
+        self.assertIn('href="/demo"', ops_html)
+        self.assertIn("location = /demo", nginx)
+        self.assertIn("/agents/shared/${SHARED_AGENT_TOKEN}", nginx)
+        self.assertIn('class="rag-ops-entry" href="/ops/"', nginx)
+
 
 if __name__ == "__main__":
     unittest.main()

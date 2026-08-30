@@ -8,6 +8,8 @@ services:
     image: docsgpt-demo-frontend:optimized
     container_name: docsgpt-demo-frontend
     restart: unless-stopped
+    environment:
+      SHARED_AGENT_TOKEN: ${SHARED_AGENT_TOKEN}
     ports:
       - "5173:5173"
     depends_on:
