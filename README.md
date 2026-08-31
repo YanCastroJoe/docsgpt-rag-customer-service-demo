@@ -2,20 +2,26 @@
 
 ## 项目简介
 
-本项目基于开源项目 [DocsGPT](https://github.com/arc53/DocsGPT) 进行本地部署与场景化配置，构建了一个面向电商售后业务的企业知识库 RAG 智能客服 Demo。系统支持上传业务文档，创建知识库 Source，配置专属 Agent，并基于检索到的文档片段生成可追溯回答。
+本项目基于开源项目 [DocsGPT](https://github.com/arc53/DocsGPT) 完成本地与云端部署、场景化配置和评测增强，构建了一个面向电商售后业务的企业知识库 RAG 智能客服 Demo。系统支持上传业务文档，创建知识库 Source，配置专属 Agent，并基于检索到的文档片段生成可追溯回答。
 
 本仓库不是 DocsGPT 源码的二次发布，而是一次面向实习求职展示的复现与应用实践记录，重点展示从部署、知识库构建、Agent 配置到问答验证的完整闭环。
 
 ## 在线演示
 
-- [直接打开企业知识库客服助手 V3](http://124.221.243.125:5173/demo)
+- [直接打开企业售后知识库 Agent](http://124.221.243.125:5173/demo)
 - [查看 RAG 评测与链路诊断台](http://124.221.243.125:5173/ops/)
 - 推荐问题：`质量问题退货运费谁承担？普通快递最高报销多少？请直接回答并给出来源。`
 - 边界问题：`离我最近的线下维修门店在哪？`
 
-公网实例运行在 2 核 4GB 的面试演示服务器上，使用预置知识库且关闭在线解析 Worker；它用于低频演示，不代表生产容量或可用性承诺。
+公网问答页隐藏了上游产品的知识库管理、设置和历史侧栏，只保留业务身份、连接状态、推荐问题、问答与来源展示；评测和版本诊断放在独立入口。公网实例运行在 2 核 4GB 的面试演示服务器上，使用预置知识库且关闭在线解析 Worker；它用于低频演示，不代表生产容量或可用性承诺。
 
 ## Demo 效果
+
+### 0. 公网用户界面
+
+公网 `/demo` 面向业务用户：推荐问题会写入并提交 DocsGPT 的真实输入组件，回答与 Sources 仍由共享 Agent 链路生成。`/ops/` 面向开发与面试诊断，展示固定集评测快照、版本对比和单条失败分析，两类任务不再混杂在同一首屏。
+
+以下截图保留 DocsGPT 管理端的 Source、Agent 配置与问答证据；最新公网交互以在线演示为准。
 
 ### 1. 知识库 Source 管理
 
@@ -45,6 +51,7 @@
 - 针对英文向量模型在中文售后问题上的错误排序，增加 FAISS 中文关键词排序并与向量检索做 RRF 融合；同时绑定强制知识边界 Prompt，将公网演示召回窗口调为 8 条。
 - 修复共享 Agent 接口遗漏 `extra_source_ids` 的兼容问题，确保全新浏览器和容器重启后仍能加载知识库，而不是依赖前端缓存。
 - 将公网前端从 Vite 开发服务器改为 Vite 生产构建 + Nginx 静态服务，并为哈希资源设置长期缓存，降低首次加载开销。
+- 重构公网共享 Agent 外壳：隐藏无关管理导航，增加业务标题、知识库状态、推荐问题和独立诊断入口；推荐问题通过真实 React 输入状态提交，不另造一套问答接口。
 - 修复生产构建暴露的共享 Agent 初始化竞态：问答提交时直接从 Agent 配置构造 `active_docs`、Prompt 与 chunks，避免页面刚加载或容器重启后出现无知识库请求。
 - 在共享会话完成知识边界拒答后清空低相关 Sources，避免正确拒答仍展示无关来源卡片。
 - 设计 30 条固定回归集，覆盖知识命中、来源文件、知识边界拒答与无依据扩写检查。
@@ -84,7 +91,7 @@
 │   ├── docker-compose.public.yml
 │   ├── configure-public-agent.sql
 │   ├── check-public-demos.sh
-│   ├── frontend/                  # 生产构建、Nginx 与拒答来源清理补丁
+│   ├── frontend/                  # 生产构建、Nginx、公开 Demo 外壳与拒答来源补丁
 │   └── overrides/                 # FAISS 中文关键词混合召回补丁
 ├── RUNBOOK.md
 ├── TROUBLESHOOTING.md
@@ -110,7 +117,7 @@
 .\start-demo.ps1 -DocsGPTPath "E:\codex\DocsGPT"
 ```
 
-再执行 `.\check-demo.ps1 -DocsGPTPath "E:\codex\DocsGPT"`；看到 `[PASS]` 后，按 [三分钟面试演示手册](DEMO.md) 展示 V3 Agent 的可追溯回答与知识边界拒答。
+再执行 `.\check-demo.ps1 -DocsGPTPath "E:\codex\DocsGPT"`；看到 `[PASS]` 后，按 [三分钟面试演示手册](DEMO.md) 展示可追溯回答、知识边界拒答与独立评测诊断。
 
 简要流程：
 
@@ -152,6 +159,9 @@ python scripts/evaluate_rag.py `
   --responses evaluation/responses/run_2026xxxx.jsonl `
   --out evaluation/reports/run_2026xxxx.md `
   --summary-json evaluation/reports/run_2026xxxx.summary.json
+
+# 校验公网 Demo 外壳与拒答来源补丁
+node --test deployment/server/frontend/patch_abstain_sources.test.mjs deployment/server/frontend/demo_shell.test.mjs
 ```
 
 运行脚本为每条问题新建隐藏会话，避免上下文串扰，并在每条完成后立即落盘，支持中断后续跑。完整字段说明与结果解释见 [evaluation/README.md](evaluation/README.md)。

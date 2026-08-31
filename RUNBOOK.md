@@ -8,7 +8,9 @@
 - WSL / Ubuntu
 - Docker Desktop
 - DocsGPT 官方仓库
-- 浏览器访问地址：`http://localhost:5173`
+- 本地管理页面：`http://localhost:5173`
+- 公网演示页面：`http://124.221.243.125:5173/demo`
+- 公网评测诊断：`http://124.221.243.125:5173/ops/`
 
 ## 2. 克隆 DocsGPT
 
@@ -91,6 +93,13 @@ docker compose --env-file .\.env -f .\deployment\docker-compose-hub.yaml up -d f
 ```text
 http://localhost:5173
 ```
+
+本地地址用于 Source、Agent 和配置管理。云端发布时对外提供两个职责分离的入口：
+
+- `/demo`：面向业务用户的共享 Agent，隐藏上游管理侧栏，仅保留问答、推荐问题和 Sources。
+- `/ops/`：面向开发诊断的固定集指标、版本回归和单条问题分析。
+
+公网界面的“知识库已连接”表示共享 Agent 配置可用，不等同于生产可用性或实时监控承诺。
 
 ## 8. 上传知识库
 
