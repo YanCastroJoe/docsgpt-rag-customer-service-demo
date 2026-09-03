@@ -8,18 +8,20 @@
 
 ## 在线演示
 
-- [直接打开企业售后知识库 Agent](http://124.221.243.125:5173/demo)
-- [查看 RAG 评测与链路诊断台](http://124.221.243.125:5173/ops/)
+- 公网域名将在完成 HTTPS、访问口令和部署后补充；仓库不保留裸 IP 或临时服务器入口。
+- 发布后同一域名提供 `/demo` 业务问答与 `/ops/` 评测诊断，二者共用受限面试 Demo 的访问口令。
 - 推荐问题：`质量问题退货运费谁承担？普通快递最高报销多少？请直接回答并给出来源。`
 - 边界问题：`离我最近的线下维修门店在哪？`
 
-公网问答页隐藏了上游产品的知识库管理、设置和历史侧栏，只保留业务身份、连接状态、推荐问题、问答与来源展示；评测和版本诊断放在独立入口。公网实例运行在 2 核 4GB 的面试演示服务器上，使用预置知识库且关闭在线解析 Worker；它用于低频演示，不代表生产容量或可用性承诺。
+公网问答页隐藏了上游产品的知识库管理、设置和历史侧栏，只保留业务身份、在线状态、常见问题、问答与来源展示。检索链路、知识边界、评测和版本诊断统一放在独立 `/ops/` 页面，避免把工程说明混入用户界面。受限面试实例使用预置脱敏知识库，运行前端、后端、Worker、PostgreSQL 与 Redis；它用于低频演示，不代表生产容量或可用性承诺。
+
+本地静态预览入口为 `/preview/shared/`。它用于验证产品界面、意图分类、同义改写、复合问题覆盖和拒答文案，采用确定性规则与本地知识快照，不调用 DocsGPT API、向量库或 LLM。`/ops/#live` 只展示当前浏览器真实发生的本地预览交互，并明确标注未执行的向量检索、RRF 和 Prompt 阶段；不能把这组记录描述成生产 Trace 或真实 API 评测。
 
 ## Demo 效果
 
 ### 0. 公网用户界面
 
-公网 `/demo` 面向业务用户：推荐问题会写入并提交 DocsGPT 的真实输入组件，回答与 Sources 仍由共享 Agent 链路生成。`/ops/` 面向开发与面试诊断，展示固定集评测快照、版本对比和单条失败分析，两类任务不再混杂在同一首屏。
+公网 `/demo` 按真实业务产品设计：常见问题会写入 DocsGPT 的真实输入组件，回答与 Sources 仍由共享 Agent 链路生成；没有知识依据时直接以用户语言说明无法回答。`/ops/` 面向开发与面试诊断，展示固定集评测快照、版本对比和单条失败分析，两类任务不再混杂在同一界面。
 
 以下截图保留 DocsGPT 管理端的 Source、Agent 配置与问答证据；最新公网交互以在线演示为准。
 
@@ -48,10 +50,10 @@
 - 创建并发布专属 Agent，将 Agent 与知识库 Source 绑定。
 - 验证 RAG 问答链路：用户问题 -> 知识库检索 -> Sources 展示 -> 回答生成。
 - 定位并修复一次真实 RAG 问题：检索结果已召回，但自定义 Prompt 未注入文档上下文，导致生成阶段未采纳 Sources。
-- 针对英文向量模型在中文售后问题上的错误排序，增加 FAISS 中文关键词排序并与向量检索做 RRF 融合；同时绑定强制知识边界 Prompt，将公网演示召回窗口调为 8 条。
+- 针对英文向量模型在中文售后问题上的错误排序，增加带售后口语归一化的 FAISS 中文关键词排序并与向量检索做 RRF 融合；同时绑定强制知识边界 Prompt，将公网 Agent 的 Prompt Chunk 数限制为 2 条，降低无关来源进入回答上下文的概率。
 - 修复共享 Agent 接口遗漏 `extra_source_ids` 的兼容问题，确保全新浏览器和容器重启后仍能加载知识库，而不是依赖前端缓存。
 - 将公网前端从 Vite 开发服务器改为 Vite 生产构建 + Nginx 静态服务，并为哈希资源设置长期缓存，降低首次加载开销。
-- 重构公网共享 Agent 外壳：隐藏无关管理导航，增加业务标题、知识库状态、推荐问题和独立诊断入口；推荐问题通过真实 React 输入状态提交，不另造一套问答接口。
+- 重构公网共享 Agent 外壳：隐藏无关管理导航，只保留业务身份、在线状态、常见问题、真实问答和 Sources；推荐问题通过真实 React 输入状态提交，工程链路与评测说明统一放入独立诊断台。
 - 修复生产构建暴露的共享 Agent 初始化竞态：问答提交时直接从 Agent 配置构造 `active_docs`、Prompt 与 chunks，避免页面刚加载或容器重启后出现无知识库请求。
 - 在共享会话完成知识边界拒答后清空低相关 Sources，避免正确拒答仍展示无关来源卡片。
 - 设计 30 条固定回归集，覆盖知识命中、来源文件、知识边界拒答与无依据扩写检查。
@@ -119,6 +121,12 @@
 
 再执行 `.\check-demo.ps1 -DocsGPTPath "E:\codex\DocsGPT"`；看到 `[PASS]` 后，按 [三分钟面试演示手册](DEMO.md) 展示可追溯回答、知识边界拒答与独立评测诊断。
 
+### 受限公网发布
+
+`deployment/server/docker-compose.public.yml` 默认仅将 Nginx 前端绑定到宿主机 `127.0.0.1:5173`，后端 `7091` 只在 Compose 内网可见。Nginx 对页面与同源 `/api/` 启用访问口令，对 API 增加限流，并将健康检查单独保持无认证。服务器外层应使用 [Caddy 示例](deployment/server/Caddyfile.example) 或等价反向代理提供 HTTPS。
+
+真实密钥、共享 Agent token、访问口令、数据库数据、原始会话结果和本机验证覆盖文件均已排除在 Git 之外。部署变量模板见 [`deployment/server/.env.example`](deployment/server/.env.example)，自动部署脚本要求显式传入 `DOCFLOW_PUBLIC_URL` 与 `DOCSGPT_PUBLIC_URL`，不再写死服务器 IP。
+
 简要流程：
 
 1. 安装 Docker Desktop 与 WSL。
@@ -160,9 +168,14 @@ python scripts/evaluate_rag.py `
   --out evaluation/reports/run_2026xxxx.md `
   --summary-json evaluation/reports/run_2026xxxx.summary.json
 
-# 校验公网 Demo 外壳与拒答来源补丁
-node --test deployment/server/frontend/patch_abstain_sources.test.mjs deployment/server/frontend/demo_shell.test.mjs
+# 校验公网外壳、拒答来源补丁与本地业务预览
+node --test deployment/server/frontend/patch_abstain_sources.test.mjs deployment/server/frontend/demo_shell.test.mjs deployment/server/frontend/preview/rag_logic.test.mjs deployment/server/frontend/preview/rag_multidimensional.test.mjs deployment/server/frontend/preview/local_preview.test.mjs
+
+# 校验关键词排序、部署配置和评测边界
+python -m unittest discover -s tests -p "test_*.py"
 ```
+
+2026-09-03 本地回归结果：Node 前端/规则测试 37/37、Python 配置与评测测试 29/29。新增完整口语问法“东西有毛病，寄回去的钱谁出？普通快递最多给报多少？”、拒答零来源、回答引用来源一致性、发布端口收敛、访问保护、Worker 配置和结果脱敏检查；这仍不把静态预览或配置级验证描述成生产准确率。
 
 运行脚本为每条问题新建隐藏会话，避免上下文串扰，并在每条完成后立即落盘，支持中断后续跑。完整字段说明与结果解释见 [evaluation/README.md](evaluation/README.md)。
 

@@ -4,14 +4,26 @@ Thumbs.db
 *.tmp
 *.zip
 deployment/server/.env
+deployment/server/.env.local
 deployment/server/.database-restored
 deployment/server/.shared-agent-token
+deployment/server/.demo-username
+deployment/server/.demo-password
+deployment/server/.demo-htpasswd
 deployment/server/data/
 deployment/server/*.dump
 deployment/server/migration/
+deployment/docker-compose.validation.override.yml
+deployment/server/overrides/Dockerfile.validation
 __pycache__/
 .venv/
 node_modules/
+
+# User review briefs and raw live sessions stay local. Publish only sanitized evidence.
+/RAG_UI优化与测试任务简报.md
+evaluation/results/
+evaluation/reports/live-validation-2026-09-03.md
+evaluation/reports/live-validation-final-2026-09-03-v2.md
 
 # Incomplete local evaluation runs; only named benchmark results are published.
 evaluation/responses/run_*.jsonl

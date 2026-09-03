@@ -27,11 +27,20 @@ observability = load_script("build_rag_observability")
 
 
 class ObservabilitySnapshotTests(unittest.TestCase):
+    def test_public_agent_limits_prompt_chunks_for_source_relevance(self) -> None:
+        sql = (ROOT / "deployment" / "server" / "configure-public-agent.sql").read_text(encoding="utf-8")
+        self.assertIn("SET chunks = 2", sql)
+        self.assertIn("Sources 与问题不相关", sql)
+        self.assertIn("<实际命中的文件名>", sql)
+
     def test_snapshot_uses_latest_run_and_removes_conversation_ids(self):
         payload = observability.build_snapshot(
             ROOT, ROOT / "evaluation" / "run_manifest.json"
         )
-        self.assertEqual("边界增强V3", payload["latest_run"]["label"])
+        self.assertEqual(
+            "边界增强V3·混合检索与来源过滤复测",
+            payload["latest_run"]["label"],
+        )
         self.assertEqual(30, payload["latest_run"]["submitted"])
         self.assertEqual(30, len(payload["traces"]))
         self.assertNotIn("conversation_id", json.dumps(payload, ensure_ascii=False))
@@ -43,12 +52,13 @@ class ObservabilitySnapshotTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 observability.resolve_repo_path(root, "../outside.json")
 
-    def test_ops_page_uses_three_top_level_views_without_sidebar(self):
+    def test_ops_page_uses_four_top_level_views_without_sidebar(self):
         html = (ROOT / "deployment" / "server" / "frontend" / "ops" / "index.html").read_text(encoding="utf-8")
-        self.assertEqual(3, html.count("data-view-target="))
+        self.assertEqual(4, html.count("data-view-target="))
         self.assertIn('data-view="overview"', html)
         self.assertIn('data-view="versions"', html)
         self.assertIn('data-view="traces"', html)
+        self.assertIn('data-view="live"', html)
         self.assertNotIn('class="sidebar"', html)
 
     def test_user_demo_and_ops_console_link_to_each_other(self):
@@ -57,7 +67,8 @@ class ObservabilitySnapshotTests(unittest.TestCase):
         nginx = (frontend / "nginx.conf").read_text(encoding="utf-8")
         self.assertIn('href="/demo"', ops_html)
         self.assertIn("location = /demo", nginx)
-        self.assertIn("/agents/shared/${SHARED_AGENT_TOKEN}", nginx)
+        self.assertIn("try_files /demo-entry.html", nginx)
+        self.assertIn("'${SHARED_AGENT_TOKEN}'", nginx)
         self.assertIn('class="rag-ops-entry" href="/ops/"', nginx)
 
 

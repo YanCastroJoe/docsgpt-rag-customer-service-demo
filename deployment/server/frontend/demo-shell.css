@@ -4,9 +4,9 @@
   top: 18px;
   right: 18px;
   display: inline-flex;
+  min-height: 42px;
   align-items: center;
   gap: 8px;
-  min-height: 42px;
   padding: 0 15px;
   border: 1px solid #d8dbea;
   border-radius: 11px;
@@ -18,41 +18,15 @@
   backdrop-filter: blur(10px);
 }
 
-.rag-ops-entry span {
-  padding: 4px 6px;
-  border-radius: 6px;
-  color: #544de0;
-  background: #eeeeff;
-  font-size: 10px;
-  letter-spacing: .06em;
-}
+.rag-ops-entry span { padding: 4px 6px; border-radius: 6px; color: #544de0; background: #eeeeff; font-size: 10px; letter-spacing: .06em; }
+.rag-ops-entry:hover { border-color: #8d89ee; color: #4f46d8; transform: translateY(-1px); }
 
-.rag-ops-entry:hover {
-  border-color: #8d89ee;
-  color: #4f46d8;
-  transform: translateY(-1px);
-}
-
-/* Public shared-Agent mode: keep the customer task in focus and move
-   engineering diagnostics into a clearly separated secondary surface. */
-.rag-public-demo [data-rag-sidebar] {
-  display: none !important;
-}
-
-.rag-public-demo [data-rag-main] {
-  width: 100% !important;
-  height: 100vh !important;
-  margin-left: 0 !important;
-  padding-top: 72px;
-}
-
-.rag-public-demo [data-rag-legacy-heading] {
-  display: none !important;
-}
-
-.rag-public-demo > .rag-ops-entry {
-  display: none;
-}
+/* The shared Agent is a customer-facing product surface. Engineering details
+   stay in /ops/ and are intentionally absent from this page. */
+.rag-public-demo [data-rag-sidebar] { display: none !important; }
+.rag-public-demo [data-rag-main] { width: 100% !important; height: 100vh !important; margin-left: 0 !important; padding-top: 70px; }
+.rag-public-demo [data-rag-legacy-heading] { display: none !important; }
+.rag-public-demo > .rag-ops-entry { display: none; }
 
 .rag-demo-header {
   position: fixed;
@@ -60,103 +34,53 @@
   top: 0;
   right: 0;
   left: 0;
-  height: 72px;
+  height: 70px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
   padding: 0 28px;
-  border-bottom: 1px solid #e4e7ec;
+  border-bottom: 1px solid #e0e5ed;
   background: rgba(255,255,255,.96);
-  box-shadow: 0 4px 18px rgba(24,32,51,.06);
+  box-shadow: 0 4px 18px rgba(24,32,51,.05);
   font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   backdrop-filter: blur(12px);
 }
 
-.rag-demo-brand,
-.rag-demo-actions {
-  display: flex;
-  align-items: center;
-}
+.rag-demo-brand { min-width: 0; display: flex; align-items: center; gap: 12px; }
+.rag-demo-mark { width: 39px; height: 39px; display: grid; flex: 0 0 auto; place-items: center; border-radius: 12px; color: #fff; background: linear-gradient(145deg,#7169ee,#4f46d8); box-shadow: 0 7px 18px rgba(79,70,216,.2); font-size: 17px; font-weight: 800; }
+.rag-demo-brand strong, .rag-demo-brand small { display: block; }
+.rag-demo-brand strong { color: #1d2638; font-size: 16px; line-height: 1.25; }
+.rag-demo-brand small { margin-top: 3px; overflow: hidden; color: #7c8798; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.rag-demo-actions { display: flex; align-items: center; gap: 14px; }
+.rag-demo-health { display: flex; align-items: center; gap: 9px; }
+.rag-demo-health > i { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: #28b57d; box-shadow: 0 0 0 4px #e5f7ef; }
+.rag-demo-health strong, .rag-demo-health small { display: block; }
+.rag-demo-health strong { color: #26785b; font-size: 13px; }
+.rag-demo-health small { margin-top: 2px; color: #8290a4; font-size: 10px; }
+.rag-demo-ops-link { min-height: 38px; display: inline-flex; align-items: center; padding: 0 13px; border: 1px solid #d8dfea; border-radius: 10px; color: #465168; background: #fff; font-size: 13px; font-weight: 750; text-decoration: none; }
+.rag-demo-ops-link:hover { border-color: #8d89ee; color: #4f46d8; background: #f7f7ff; }
 
-.rag-demo-brand { min-width: 0; gap: 12px; }
-.rag-demo-actions { flex: 0 0 auto; gap: 12px; }
-
-.rag-demo-mark {
-  display: grid;
-  flex: 0 0 auto;
-  width: 38px;
-  height: 38px;
-  place-items: center;
-  border-radius: 11px;
-  color: #fff;
-  background: linear-gradient(145deg,#7169ee,#4f46d8);
-  box-shadow: 0 8px 20px rgba(79,70,216,.22);
-  font-size: 17px;
-  font-weight: 800;
-}
-
-.rag-demo-brand strong,
-.rag-demo-brand small { display: block; }
-.rag-demo-brand strong { color: #1d2638; font-size: 17px; line-height: 1.25; }
-.rag-demo-brand small { margin-top: 3px; overflow: hidden; color: #7b8496; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-
-.rag-demo-health {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: #26785b;
-  font-size: 13px;
-  font-weight: 650;
-}
-.rag-demo-health::before { width: 8px; height: 8px; border-radius: 50%; background: #28b57d; box-shadow: 0 0 0 4px #e5f7ef; content: ''; }
-
-.rag-demo-diagnostics {
-  display: inline-flex;
-  min-height: 40px;
-  align-items: center;
-  padding: 0 14px;
-  border: 1px solid #d8dbea;
-  border-radius: 10px;
-  color: #4f46d8;
-  background: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  text-decoration: none;
-}
-.rag-demo-diagnostics:hover { border-color: #8d89ee; background: #f7f7ff; }
-
-.rag-suggestions {
-  width: 100%;
-  margin: 0 0 14px;
-  padding: 16px;
-  border: 1px solid #e6e7ef;
-  border-radius: 16px;
-  background: linear-gradient(145deg,#fafaff,#fff);
-}
-.rag-suggestions p { margin: 0 0 10px; color: #555f72; font-size: 13px; font-weight: 650; }
-.rag-suggestion-list { display: flex; flex-wrap: wrap; gap: 8px; }
-.rag-suggestion {
-  min-height: 36px;
-  padding: 0 12px;
-  border: 1px solid #dddff0;
-  border-radius: 999px;
-  color: #41495c;
-  background: #fff;
-  font-size: 13px;
-  font-weight: 550;
-  cursor: pointer;
-}
-.rag-suggestion:hover { border-color: #8d89ee; color: #4f46d8; background: #f4f3ff; }
+.rag-suggestions { width: 100%; margin: 0 0 12px; padding: 15px; border: 1px solid #e6e7ef; border-radius: 15px; background: #fff; }
+.rag-suggestions p { margin: 0 0 10px; color: #717d91; font-size: 12px; font-weight: 650; }
+.rag-suggestion-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+.rag-suggestion { min-width: 0; min-height: 46px; display: flex; align-items: center; gap: 9px; padding: 8px 11px; border: 1px solid #dde1eb; border-radius: 10px; color: #41495c; background: #fff; font-size: 12px; font-weight: 550; text-align: left; cursor: pointer; }
+.rag-suggestion:hover { border-color: #8d89ee; color: #4f46d8; background: #f7f7ff; }
+.rag-suggestion small { flex: 0 0 auto; padding: 4px 6px; border-radius: 6px; color: #554de0; background: #eeedff; font-size: 9px; font-weight: 800; }
+.rag-suggestion span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 @media (max-width: 700px) {
   .rag-ops-entry { top: 12px; right: 12px; min-height: 38px; padding: 0 12px; font-size: 12px; }
   .rag-ops-entry span { display: none; }
   .rag-public-demo [data-rag-main] { padding-top: 64px; }
   .rag-demo-header { height: 64px; padding: 0 14px; }
-  .rag-demo-brand small, .rag-demo-health { display: none; }
+  .rag-demo-brand small { display: none; }
   .rag-demo-brand strong { font-size: 15px; }
-  .rag-demo-diagnostics { min-height: 36px; padding: 0 11px; font-size: 12px; }
+  .rag-demo-actions { gap: 10px; }
+  .rag-demo-health strong { font-size: 11px; }
+  .rag-demo-health small { display: none; }
+  .rag-demo-ops-link { min-height: 36px; padding: 0 10px; font-size: 12px; }
   .rag-suggestions { padding: 13px; }
+  .rag-suggestion-list { grid-template-columns: 1fr; }
   .rag-suggestion { width: 100%; justify-content: flex-start; text-align: left; }
 }

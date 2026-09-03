@@ -8,7 +8,7 @@
 - 拒答后是否继续追加行业常识或其他无依据内容；
 - 端到端通过率、逐条延迟与采集异常。
 
-`run_docsgpt_evaluation.py` 负责调用本地 DocsGPT Agent；`evaluate_rag.py` 只做确定性离线评分，不请求模型或生成答案。每条结果都保留会话 ID、Sources、延迟和采集诊断，确保 README 与简历指标可以追溯到真实运行。
+`run_docsgpt_evaluation.py` 负责调用本地 DocsGPT Agent；`evaluate_rag.py` 只做确定性离线评分，不请求模型或生成答案。原始本地结果保留会话 ID、Sources、延迟和采集诊断；提交 GitHub 前必须使用 `sanitize_rag_results.py` 移除会话标识。公开证据仍保留回答、Sources、延迟与评分，不公开可关联后台会话的 ID。
 
 ## 1. 校验评测集
 
@@ -30,6 +30,14 @@ API Key 只从环境变量读取，不会写入输出。脚本行为：
 - JSON 请求显式使用 UTF-8；
 - 每条完成后立即落盘，中断后使用同一 `--out` 自动续跑；
 - 保存回答、来源文件、会话 ID、耗时和采集清洗标记。
+
+真实采集结果默认写入已被 Git 忽略的 `evaluation/results/`。生成可公开提交的副本：
+
+```powershell
+python scripts/sanitize_rag_results.py `
+  evaluation/results/run_2026xxxx.jsonl `
+  evaluation/responses/run_2026xxxx.public.jsonl
+```
 
 也可以只运行指定用例做定向回归：
 

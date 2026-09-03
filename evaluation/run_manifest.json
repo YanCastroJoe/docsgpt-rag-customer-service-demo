@@ -37,6 +37,15 @@
       "agent_id": "23d42c6b-bba6-4baa-ba87-aef53df8a0ae",
       "responses": "evaluation/responses/v3-2026-08-07.jsonl",
       "summary": "evaluation/reports/v3-2026-08-07.summary.json"
+    },
+    {
+      "label": "边界增强V3·混合检索与来源过滤复测",
+      "captured_at": "2026-09-03",
+      "knowledge_base": "knowledge_base/customer_service_rag_optimized.md",
+      "source_name": "星禾优选客服知识库_RAG精简版_V3_边界增强",
+      "agent_id": "23d42c6b-bba6-4baa-ba87-aef53df8a0ae",
+      "responses": "evaluation/responses/live-validation-chunk-filtered-2026-09-03.public.jsonl",
+      "summary": "evaluation/reports/live-validation-chunk-filtered-2026-09-03.summary.json"
     }
   ]
 }

@@ -6,8 +6,25 @@ import re
 from typing import Iterable, List
 
 
+_SYNONYM_RULES = (
+    (r"东西坏了|商品坏了|有毛病|出毛病|用不了|有故障", "质量问题"),
+    (r"寄回去的钱|寄回的钱|快递费谁出|寄回费用|寄回快递费|邮费", "退货运费"),
+    (r"最多给报多少|最多能报多少|最多报多少|报销上限", "最高报销"),
+    # Preserve the specific policy phrase while adding its broader intent.
+    # Replacing it outright made generic return chunks outrank the exact
+    # seven-day policy section.
+    (
+        r"七天无理由退货|七天无理由|无理由退货",
+        "七天无理由退货 非质量问题退货",
+    ),
+)
+
+
 def _normalise(text: str) -> str:
-    return re.sub(r"\s+", "", (text or "").lower())
+    normalised = re.sub(r"\s+", "", (text or "").lower())
+    for pattern, replacement in _SYNONYM_RULES:
+        normalised = re.sub(pattern, replacement, normalised)
+    return normalised
 
 
 def _terms(text: str) -> set[str]:

@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.1",
+  "cases_file": "evaluation/deployment_smoke_cases.json",
+  "responses_file": "evaluation/responses/deployment-smoke-2026-09-03.public.jsonl",
+  "total_cases": 6,
+  "submitted_cases": 6,
+  "answer_cases_submitted": 3,
+  "abstain_cases_submitted": 3,
+  "metrics": {
+    "answer_complete_pass_rate": 1.0,
+    "condition_coverage": 1.0,
+    "source_citation_hit_rate": 1.0,
+    "abstention_pass_rate": 1.0,
+    "end_to_end_pass_rate": 1.0
+  },
+  "failure_counts": {},
+  "category_metrics": {
+    "售后-质量问题": {
+      "submitted": 1,
+      "end_to_end_passes": 1,
+      "end_to_end_pass_rate": 1.0
+    },
+    "售后-质量问题-口语": {
+      "submitted": 1,
+      "end_to_end_passes": 1,
+      "end_to_end_pass_rate": 1.0
+    },
+    "售后-非质量问题": {
+      "submitted": 1,
+      "end_to_end_passes": 1,
+      "end_to_end_pass_rate": 1.0
+    },
+    "边界-个人订单": {
+      "submitted": 1,
+      "end_to_end_passes": 1,
+      "end_to_end_pass_rate": 1.0
+    },
+    "边界-商品推荐": {
+      "submitted": 1,
+      "end_to_end_passes": 1,
+      "end_to_end_pass_rate": 1.0
+    },
+    "边界-海外服务": {
+      "submitted": 1,
+      "end_to_end_passes": 1,
+      "end_to_end_pass_rate": 1.0
+    }
+  },
+  "latency_metrics": {
+    "sample_count": 6,
+    "average_ms": 10268,
+    "p50_ms": 9283,
+    "p95_ms": 14276,
+    "max_ms": 14276
+  },
+  "collection_diagnostics": {
+    "encoding_repaired_answers": 0,
+    "answers_with_stripped_thought_events": 0,
+    "thought_events_stripped_total": 0
+  }
+}

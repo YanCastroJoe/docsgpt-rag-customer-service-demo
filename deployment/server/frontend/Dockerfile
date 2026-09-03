@@ -1,4 +1,4 @@
-FROM ghcr.nju.edu.cn/arc53/docsgpt-fe@sha256:484b16abf86ec505a37a450aa62a0bf98debdcf68a2413a6ce2cd937af2c7dc1 AS builder
+FROM docker.io/arc53/docsgpt-fe@sha256:ede521bce6d7cfaddd3d3e2245aaad1acf3ae116bb94483832bd793be0789d01 AS builder
 
 ARG PUBLIC_API_URL
 ENV VITE_API_HOST=${PUBLIC_API_URL}
@@ -15,5 +15,6 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 COPY ops /usr/share/nginx/html/ops
 COPY demo-shell.css /usr/share/nginx/html/demo-shell.css
 COPY demo-shell.js /usr/share/nginx/html/demo-shell.js
+COPY demo-entry.html /usr/share/nginx/html/demo-entry.html
 
 EXPOSE 5173

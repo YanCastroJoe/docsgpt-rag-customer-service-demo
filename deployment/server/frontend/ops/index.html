@@ -4,60 +4,103 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DocsGPT RAG 评测与链路诊断台</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=rag-ui-v3" />
   </head>
   <body>
     <header class="topbar">
       <div class="topbar-main">
         <div class="brand"><span class="brand-mark">R</span><div><strong>RAG 诊断台</strong><small>DocsGPT 企业知识库</small></div></div>
-        <a class="demo-link" href="/demo">← 返回问答助手</a>
+        <div class="topbar-actions">
+          <span id="preview-badge" class="preview-badge" hidden>LOCAL PREVIEW</span>
+          <a id="demo-link" class="demo-link" href="/demo">← 返回问答助手</a>
+        </div>
       </div>
       <nav class="view-tabs" aria-label="诊断台模块">
         <button class="view-tab active" type="button" data-view-target="overview" aria-selected="true">运行概览</button>
         <button class="view-tab" type="button" data-view-target="versions" aria-selected="false">版本回归</button>
         <button class="view-tab" type="button" data-view-target="traces" aria-selected="false">单条诊断</button>
+        <button class="view-tab" type="button" data-view-target="live" aria-selected="false">最近交互</button>
       </nav>
     </header>
 
     <main>
       <section class="view active" data-view="overview">
         <div class="page-heading">
-          <div><span class="eyebrow">RAG EVALUATION / OVERVIEW</span><h1>运行质量概览</h1><p>集中查看当前固定评测快照、核心质量指标与检索生成链路。</p></div>
-          <span id="run-date" class="date-pill">--</span>
+          <div><span class="eyebrow">RAG EVALUATION / OVERVIEW</span><h1>运行质量概览</h1><p>集中查看固定评测快照、指标口径与项目配置链路。</p></div>
+          <span class="snapshot-stamp"><small>固定评测快照</small><strong id="run-date">--</strong></span>
         </div>
         <article class="panel run-summary">
           <div><span class="eyebrow">LATEST VERIFIED RUN</span><h2 id="run-title">正在载入评测数据…</h2><p id="run-notice"></p></div>
-          <div class="evidence-note"><strong>证据边界</strong><span>固定评测快照，不代表生产准确率或实时监控。</span></div>
+          <div class="evidence-note"><strong>证据边界</strong><span>固定评测快照，不代表生产准确率、知识实时更新或底层实时 Trace。</span></div>
         </article>
         <section class="metrics" aria-label="核心指标">
-          <article><span>端到端通过率</span><strong id="metric-e2e">--</strong><small>回答 + 来源联合判定</small></article>
-          <article><span>必答条件覆盖</span><strong id="metric-coverage">--</strong><small>规则化固定集检查</small></article>
-          <article><span>知识边界拒答</span><strong id="metric-boundary">--</strong><small>拒答且无依据扩写</small></article>
-          <article><span>P95 响应耗时</span><strong id="metric-p95">--</strong><small>真实 API 回答快照</small></article>
+          <article><span>端到端通过率</span><strong id="metric-e2e">--</strong><small id="metric-e2e-note">回答 + 来源联合判定</small></article>
+          <article><span>必答条件覆盖</span><strong id="metric-coverage">--</strong><small id="metric-coverage-note">规则化固定集检查</small></article>
+          <article><span>知识边界拒答</span><strong id="metric-boundary">--</strong><small id="metric-boundary-note">拒答且无依据扩写</small></article>
+          <article><span>P95 响应耗时</span><strong id="metric-p95">--</strong><small id="metric-p95-note">真实 API 回答快照</small></article>
         </section>
         <article class="panel">
-          <div class="section-heading"><div><span class="eyebrow">CONTEXT ENGINEERING</span><h2>检索与生成链路</h2></div><span class="muted">配置链路 + 评测验证</span></div>
+          <div class="section-heading"><div><span class="eyebrow">CONTEXT ENGINEERING</span><h2>项目配置链路</h2></div><span class="muted">配置说明，不是逐请求实时 Trace</span></div>
           <div id="pipeline-list" class="pipeline"></div>
         </article>
       </section>
 
       <section class="view" data-view="versions" hidden>
-        <div class="page-heading"><div><span class="eyebrow">VERSION REGRESSION</span><h1>版本回归对比</h1><p>使用同一组30条固定用例，观察知识库与边界规则迭代后的指标变化。</p></div></div>
+        <div class="page-heading">
+          <div><span class="eyebrow">VERSION REGRESSION</span><h1>版本回归对比</h1><p>同一组30条固定用例；每个版本默认与上一版本比较。</p></div>
+          <span class="baseline-note">默认基线：上一版本</span>
+        </div>
         <article class="panel comparison-panel">
-          <div class="comparison-head"><span>评测版本</span><span>端到端</span><span>条件覆盖</span><span>来源命中</span><span>边界拒答</span></div>
+          <div class="comparison-head"><span>评测版本</span><span>端到端</span><span>条件覆盖</span><span>来源命中</span><span>边界拒答</span><span>状态</span></div>
           <div id="version-list" class="version-list"></div>
         </article>
-        <p class="footnote">所有比例仅代表对应固定评测快照；不同版本均提交30条真实API回答。</p>
+        <p class="footnote">绿色表示相对上一版本改善，红色表示回归；历史失败明细未随当前快照保存时不会虚构失败案例。</p>
       </section>
 
       <section class="view" data-view="traces" hidden>
-        <div class="page-heading"><div><span class="eyebrow">EVALUATION TRACE</span><h1>单条问题诊断</h1><p>沿“问题 - 来源 - 回答 - 规则判定”检查单条用例，不将页面记录解释为底层实时Trace。</p></div></div>
+        <div class="page-heading"><div><span class="eyebrow">EVALUATION TRACE</span><h1>单条问题诊断</h1><p>检查问题、来源、回答和规则判定；缺失的 Chunk 与检索字段明确显示为未提供。</p></div></div>
         <article class="panel trace-panel">
-          <div class="trace-picker"><label for="trace-select">选择固定评测用例</label><select id="trace-select"></select></div>
+          <div class="trace-picker">
+            <label for="trace-select">选择固定评测用例</label>
+            <div><select id="trace-select"></select><button id="boundary-case-button" type="button">查看边界用例</button></div>
+          </div>
+          <section class="case-chain" aria-label="项目配置链路">
+            <div><strong>项目配置链路</strong><small>非逐阶段实时 Trace</small></div>
+            <ol id="case-chain-list"></ol>
+          </section>
           <div id="trace-detail" class="trace-detail"></div>
+          <section class="retrieval-record">
+            <div class="section-heading"><div><span class="eyebrow">RETRIEVAL RECORD</span><h2>当前快照中的检索信息</h2></div></div>
+            <p id="retrieval-notice" class="data-notice"></p>
+            <div class="table-scroll">
+              <table><thead><tr><th>排名</th><th>来源</th><th>Chunk ID</th><th>检索方式</th><th>分数</th><th>进入 Prompt</th></tr></thead><tbody id="retrieval-body"></tbody></table>
+            </div>
+          </section>
+        </article>
+      </section>
+
+      <section class="view" data-view="live" hidden>
+        <div class="page-heading">
+          <div><span class="eyebrow">LOCAL INTERACTION TRACE</span><h1>最近交互诊断</h1><p>查看共享问答页刚刚产生的本地预览记录，定位意图分类、改写、子问题覆盖和拒答原因。</p></div>
+          <button id="refresh-live-traces" class="secondary-button" type="button">刷新记录</button>
+        </div>
+        <article class="panel trace-panel">
+          <p class="live-trace-warning"><strong>数据边界：</strong>这些是当前浏览器中真实发生的本地预览交互，不是 DocsGPT 后端 API、向量检索、LLM Prompt 或生产 Trace；未发生的阶段不会补造。</p>
+          <div id="live-empty" class="live-empty" hidden>还没有本地交互记录。请先返回问答助手提交一个问题，再点击“刷新记录”。</div>
+          <div id="live-content">
+            <div class="trace-picker">
+              <label for="live-trace-select">选择最近交互</label>
+              <select id="live-trace-select"></select>
+            </div>
+            <div id="live-trace-detail" class="trace-detail"></div>
+            <section class="retrieval-record">
+              <div class="section-heading"><div><span class="eyebrow">REQUEST PIPELINE</span><h2>本次请求阶段记录</h2></div></div>
+              <div id="live-pipeline" class="live-pipeline"></div>
+            </section>
+          </div>
         </article>
       </section>
     </main>
-    <script src="./app.js" defer></script>
+    <script type="module" src="./app.js?v=rag-ui-v4"></script>
   </body>
 </html>

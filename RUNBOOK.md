@@ -9,8 +9,8 @@
 - Docker Desktop
 - DocsGPT 官方仓库
 - 本地管理页面：`http://localhost:5173`
-- 公网演示页面：`http://124.221.243.125:5173/demo`
-- 公网评测诊断：`http://124.221.243.125:5173/ops/`
+- 公网演示页面：`https://<已配置域名>/demo`
+- 公网评测诊断：`https://<已配置域名>/ops/`
 
 ## 2. 克隆 DocsGPT
 
@@ -100,6 +100,14 @@ http://localhost:5173
 - `/ops/`：面向开发诊断的固定集指标、版本回归和单条问题分析。
 
 公网界面的“知识库已连接”表示共享 Agent 配置可用，不等同于生产可用性或实时监控承诺。
+
+## 7.1 公网安全边界
+
+- 仅对外发布 HTTPS 反向代理端口；`5173` 默认绑定 `127.0.0.1`，后端 `7091` 不映射到宿主机。
+- Nginx 为 `/demo`、`/ops/` 与同源 `/api/` 统一启用访问口令，并对 API 请求限流；`/healthz` 仅用于无认证探活。
+- `.env`、`.demo-password`、`.demo-htpasswd`、共享 Agent token、数据库目录和 `evaluation/results/` 原始会话均不得提交 Git。
+- 访问口令只是低频面试 Demo 的入口保护，不等同于用户登录、RBAC 或生产级多租户鉴权。
+- 使用 `deployment/server/Caddyfile.example` 配置 TLS 域名；部署脚本要求显式传入 `DOCFLOW_PUBLIC_URL` 与 `DOCSGPT_PUBLIC_URL`，不接受写死公网 IP。
 
 ## 8. 上传知识库
 

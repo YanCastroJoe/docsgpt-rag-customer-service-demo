@@ -1,19 +1,20 @@
 (() => {
   if (!window.location.pathname.startsWith('/agents/shared/')) return;
 
-  const questions = [
-    '质量问题退货时，运费由谁承担？',
-    '普通商品退货退款通常要多久？',
-    '换货时同款商品缺货怎么办？',
+  const suggestions = [
+    { label: '退货运费', question: '质量问题退货时，运费由谁承担？' },
+    { label: '退款时效', question: '普通商品退货退款通常要多久？' },
+    { label: '换货处理', question: '换货时同款商品缺货怎么办？' },
+    { label: '申请材料', question: '质量问题售后需要提供什么凭证？' },
   ];
 
   const replaceCopy = () => {
     const replacements = new Map([
-      ['企业知识库客服助手_V3', '企业售后知识库 Agent'],
-      ['DocsGPT 如何帮助您？', '请输入售后问题，例如：质量问题退货运费由谁承担？'],
-      ['DocsGPT 使用 GenAI, 请使用来源审核关键信息.', '回答仅依据当前演示知识库；请通过来源核验关键信息。'],
-      ['基于FAQ精简版V3知识库的RAG客服Agent，强化知识边界拒答并禁止无依据扩写。', '面向电商售后场景，检索 FAQ 知识库并生成带来源回答；超出知识边界时明确拒答。'],
-      ['by Demo', '公开演示环境'],
+      ['企业知识库客服助手_V3', '售后智能助手'],
+      ['DocsGPT 如何帮助您？', '请输入你的问题'],
+      ['DocsGPT 使用 GenAI, 请使用来源审核关键信息.', 'AI 生成内容仅供参考，重要信息请以平台规则为准。'],
+      ['基于FAQ精简版V3知识库的RAG客服Agent，强化知识边界拒答并禁止无依据扩写。', '我可以解答退换货、退款规则和物流政策；暂时无法查询具体订单状态。'],
+      ['by Demo', '在线服务'],
     ]);
 
     document.querySelectorAll('h1, h2, p, div').forEach((node) => {
@@ -50,13 +51,21 @@
     header.innerHTML = `
       <div class="rag-demo-brand">
         <span class="rag-demo-mark" aria-hidden="true">R</span>
-        <span><strong>企业售后知识库 Agent</strong><small>检索知识库并生成带来源的客服回答</small></span>
+        <span><strong>售后智能助手</strong><small>退换货、退款与物流政策</small></span>
       </div>
       <div class="rag-demo-actions">
-        <span class="rag-demo-health">知识库已连接</span>
-        <a class="rag-demo-diagnostics" href="/ops/">评测与诊断</a>
+        <span class="rag-demo-health"><i></i><span><strong>服务正常</strong><small>边界增强V3 · 固定快照 2026-08-07</small></span></span>
+        <a class="rag-demo-ops-link" href="/ops/">诊断台</a>
       </div>`;
     document.body.append(header);
+  };
+
+  const fillQuestion = (input, question) => {
+    const valueSetter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
+    valueSetter?.call(input, question);
+    input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: question }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    input.focus();
   };
 
   const ensureSuggestions = (input) => {
@@ -69,21 +78,15 @@
 
     const panel = document.createElement('section');
     panel.className = 'rag-suggestions';
-    panel.setAttribute('aria-label', '常用问题');
-    panel.innerHTML = `<p>你可以直接提问，也可以从常用问题开始：</p><div class="rag-suggestion-list"></div>`;
+    panel.setAttribute('aria-label', '常见售后问题');
+    panel.innerHTML = '<p>猜你想问</p><div class="rag-suggestion-list"></div>';
     const list = panel.querySelector('.rag-suggestion-list');
-    questions.forEach((question) => {
+    suggestions.forEach((suggestion) => {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'rag-suggestion';
-      button.textContent = question;
-      button.addEventListener('click', () => {
-        const valueSetter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
-        valueSetter?.call(input, question);
-        input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: question }));
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-        input.focus();
-      });
+      button.innerHTML = `<small>${suggestion.label}</small><span>${suggestion.question}</span>`;
+      button.addEventListener('click', () => fillQuestion(input, suggestion.question));
       list.append(button);
     });
     inputSection.parentElement.insertBefore(panel, inputSection);

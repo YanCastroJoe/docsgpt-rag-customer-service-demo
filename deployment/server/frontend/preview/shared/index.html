@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>售后智能助手</title>
+    <link rel="stylesheet" href="./styles.css?v=rag-ui-v3" />
+  </head>
+  <body>
+    <header class="app-header">
+      <a class="brand" href="./" aria-label="返回售后智能助手">
+        <span class="brand-mark">R</span>
+        <span><strong>售后智能助手</strong><small>退换货、退款与物流政策</small></span>
+      </a>
+      <div class="header-actions">
+        <span class="service-status"><i></i><span><strong>知识库已连接</strong><small>售后政策知识快照</small></span></span>
+        <a class="ops-link" href="/ops/">诊断台</a>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <section class="chat-card" aria-label="售后咨询">
+        <header class="chat-heading">
+          <div><strong>在线咨询</strong><small>仅回答售后政策，无法查询个人订单和实时物流</small></div>
+          <button class="text-button" id="reset-button" type="button">清空</button>
+        </header>
+
+        <div class="conversation" id="conversation" aria-live="polite">
+          <section id="welcome-panel" class="welcome-panel">
+            <div class="message assistant-message">
+              <span class="avatar">R</span>
+              <div><strong>你好，需要什么帮助？</strong><p>我可以解答退换货、退款规则和物流政策；暂时无法查询具体订单状态。如需查询个人订单，请前往订单详情或联系人工客服。</p></div>
+            </div>
+            <div class="suggestions">
+              <p>猜你想问</p>
+              <div id="suggestion-list" class="suggestion-list"></div>
+            </div>
+          </section>
+        </div>
+
+        <form class="composer" id="question-form">
+          <textarea id="question-input" rows="1" aria-label="输入售后问题" placeholder="请输入你的问题，Enter 发送，Shift+Enter 换行"></textarea>
+          <div class="composer-footer">
+            <span id="composer-status">AI 生成内容仅供参考，重要信息请以平台规则为准</span>
+            <button class="primary-button" id="send-button" type="submit" aria-label="发送问题"><span>发送</span><b>↑</b></button>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+    <aside class="source-drawer" id="source-drawer" aria-labelledby="source-title" hidden>
+      <header><div><small>ANSWER SOURCE</small><h2 id="source-title">来源详情</h2></div><button id="close-source" type="button" aria-label="关闭来源详情">×</button></header>
+      <div class="source-summary"><span id="source-index">来源1</span><strong id="source-file">--</strong></div>
+      <dl>
+        <div><dt>知识库版本</dt><dd id="source-version">--</dd></div>
+        <div><dt>Chunk ID</dt><dd id="source-chunk">--</dd></div>
+        <div><dt>命中片段</dt><dd id="source-snippet">--</dd></div>
+        <div><dt>页码 / 章节</dt><dd id="source-location">--</dd></div>
+        <div><dt>检索分数</dt><dd id="source-score">--</dd></div>
+      </dl>
+      <p class="missing-note">仅展示当前接口真实提供的字段；缺失的片段级信息不会补造。</p>
+    </aside>
+
+    <div class="toast" id="toast" role="status" hidden></div>
+    <script type="module" src="./app.js?v=rag-ui-v4"></script>
+  </body>
+</html>

@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "description": "部署前指定问法冒烟测试：覆盖正式表达、口语表达、否定条件、个人订单和知识边界。",
+  "cases": [
+    {
+      "id": "SMOKE-001",
+      "category": "售后-质量问题",
+      "question": "质量问题退货运费谁承担？普通快递最高报销多少？",
+      "expected_behavior": "answer",
+      "required_patterns": ["(非人为|质量问题)", "(平台|商家).{0,12}(承担|负责)", "12\\s*元"],
+      "source_hints": ["customer_service_rag_optimized"]
+    },
+    {
+      "id": "SMOKE-002",
+      "category": "售后-质量问题-口语",
+      "question": "东西有毛病，寄回去的钱谁出？普通快递最多给报多少？",
+      "expected_behavior": "answer",
+      "required_patterns": ["(非人为|质量问题)", "(平台|商家).{0,12}(承担|负责)", "12\\s*元"],
+      "source_hints": ["customer_service_rag_optimized"]
+    },
+    {
+      "id": "SMOKE-003",
+      "category": "售后-非质量问题",
+      "question": "商品没有质量问题，只是不想要了，退货运费谁承担？",
+      "expected_behavior": "answer",
+      "required_patterns": ["非质量", "((用户|买家).{0,12}(承担|负责).{0,12}(运费|寄回)|(运费|寄回).{0,12}(用户|买家).{0,12}(承担|负责))"],
+      "source_hints": ["customer_service_rag_optimized"]
+    },
+    {
+      "id": "SMOKE-004",
+      "category": "边界-个人订单",
+      "question": "我的订单123456退款到哪一步了？",
+      "expected_behavior": "abstain",
+      "abstain_patterns": ["(没有|未找到|未明确|不包含).{0,16}(信息|说明|规则)|联系人工客服|人工确认"],
+      "source_hints": []
+    },
+    {
+      "id": "SMOKE-005",
+      "category": "边界-海外服务",
+      "question": "海外订单退货运费最高能报销多少？",
+      "expected_behavior": "abstain",
+      "abstain_patterns": ["(没有|未找到|未明确|不包含).{0,16}(信息|说明|规则)|联系人工客服|人工确认"],
+      "source_hints": []
+    },
+    {
+      "id": "SMOKE-006",
+      "category": "边界-商品推荐",
+      "question": "推荐一款2000元以内的手机。",
+      "expected_behavior": "abstain",
+      "abstain_patterns": ["(没有|未找到|未明确|不包含).{0,16}(信息|说明|规则)|联系人工客服|人工确认"],
+      "source_hints": []
+    }
+  ]
+}

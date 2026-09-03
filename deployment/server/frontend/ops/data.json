@@ -3,8 +3,8 @@
   "mode": "fixed_evaluation_snapshot",
   "notice": "数据来自固定评测集的真实 API 回答快照，不是生产流量或实时内部 Trace。",
   "latest_run": {
-    "label": "边界增强V3",
-    "captured_at": "2026-08-07",
+    "label": "边界增强V3·混合检索与来源过滤复测",
+    "captured_at": "2026-09-03",
     "submitted": 30,
     "answer_cases": 24,
     "boundary_cases": 6,
@@ -12,8 +12,8 @@
     "condition_coverage": 100.0,
     "source_hit_rate": 100.0,
     "boundary_pass_rate": 100.0,
-    "p50_ms": 8430,
-    "p95_ms": 13596,
+    "p50_ms": 9803,
+    "p95_ms": 25978,
     "failure_counts": {}
   },
   "pipeline": [
@@ -79,6 +79,15 @@
       "condition_coverage": 100.0,
       "source_hit_rate": 100.0,
       "boundary_pass_rate": 100.0
+    },
+    {
+      "label": "边界增强V3·混合检索与来源过滤复测",
+      "captured_at": "2026-09-03",
+      "submitted": 30,
+      "end_to_end_pass_rate": 100.0,
+      "condition_coverage": 100.0,
+      "source_hit_rate": 100.0,
+      "boundary_pass_rate": 100.0
     }
   ],
   "traces": [
@@ -93,8 +102,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 8554,
-      "answer_excerpt": "根据您提供的知识库文档，关于质量问题退货运费及报销标准的说明如下： **1. 质量问题退货运费由谁承担？** 如果商品存在**非人为质量问题**，且用户在**签收后 15 日内**提交售后申请并**通过凭证审核**，退货、换货或维修产生的**往返运费由平台承担**。 **2. 普通快递最高报销多少？** 用户自行寄回商品时，经核实属于质量问题的，普通快递运费**最高报销 12 元**。偏远地区和大件商品需要客服单独确认运费金额。 此外…",
+      "latency_ms": 9234,
+      "answer_excerpt": "质量问题退货运费由平台承担；用户自行寄回时，普通快递运费最高报销12元。 关键条件：商品须存在非人为质量问题，且用户在签收后15日内提交售后申请并通过凭证审核；偏远地区及大件商品运费需客服单独确认。 来源：customer_service_rag_optimized.md · 质量问题退货运费",
       "failure_types": []
     },
     {
@@ -108,8 +117,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 13340,
-      "answer_excerpt": "根据 **customer_service_rag_optimized.md** 中的说明，商品有质量问题时，用户需要在**签收后 15 日内**提交售后申请，并上传清晰照片、视频或检测说明。客服审核后，可根据情况引导用户选择退货、换货或维修。",
+      "latency_ms": 11536,
+      "answer_excerpt": "需要在签收后 15 日内提交售后申请。 需同时上传清晰的照片、视频或检测说明等凭证，客服审核通过后方可办理退货、换货或维修。 来源：customer_service_rag_optimized.md · 质量问题售后流程",
       "failure_types": []
     },
     {
@@ -123,8 +132,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 8221,
-      "answer_excerpt": "根据《customer_service_rag_optimized.md》，用户需要在签收后 15 日内提交售后申请，并上传**清晰照片、视频或检测说明**作为质量问题凭证。客服审核通过后，会根据情况引导退货、换货或维修。",
+      "latency_ms": 10090,
+      "answer_excerpt": "售后申请需上传清晰照片、视频或检测说明作为质量问题凭证。 需在签收后 15 日内提交，经客服审核通过后方可进入后续处理。 来源：customer_service_rag_optimized.md · 质量问题售后流程",
       "failure_types": []
     },
     {
@@ -138,8 +147,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 5312,
-      "answer_excerpt": "根据《customer_service_rag_optimized.md》中的“质量问题退货运费”说明： **不建议选择到付。** 若用户选择到付，仓库有权拒收。客服应提醒用户使用普通快递寄回，并保留快递单号。 同时，质量问题经核实后，用户自行寄回商品时，普通快递运费**最高可报销 12 元**（偏远地区和大件商品需单独确认运费金额）。",
+      "latency_ms": 17543,
+      "answer_excerpt": "不建议用户选择到付。 若用户选择到付，仓库有权拒收；请使用普通快递寄回商品并保留好快递单号。 来源：customer_service_rag_optimized.md · 质量问题退货运费",
       "failure_types": []
     },
     {
@@ -153,8 +162,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 5766,
-      "answer_excerpt": "非质量问题退货（如“不想要了”），寄回运费由**用户自行承担**。商品需保持外包装、配件、赠品、说明书完整，且不影响二次销售。 来源：《customer_service_rag_optimized.md》— 非质量问题退货运费",
+      "latency_ms": 11785,
+      "answer_excerpt": "非质量问题退货由用户承担寄回运费。 商品需保持外包装、配件、赠品、说明书完整，不影响二次销售。 来源：customer_service_rag_optimized.md · 非质量问题退货运费",
       "failure_types": []
     },
     {
@@ -168,8 +177,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 13223,
-      "answer_excerpt": "根据当前知识库，**非质量问题退货**对商品状态的要求为：商品需保持外包装、配件、赠品、说明书完整，不影响二次销售。（来源：customer_service_rag_optimized.md） 关于您提到的“七天无理由退货”的具体时效及完整条件，当前知识库中未找到相关信息，建议联系人工客服确认。",
+      "latency_ms": 7761,
+      "answer_excerpt": "商品需保持外包装、配件、赠品、说明书完整且不影响二次销售，并自签收次日零点起七日内提出申请。 仅适用于星禾优选自营店铺的日用百货、数码配件、小家电和美妆个护类商品；已明显使用、洗涤、损坏、缺少配件、定制类、鲜活易腐类、数字权益类商品，以及商品页面已明确标注不支持且下单前已有提示的，不适用七天无理由退货。 来源：customer_service_rag_optimized.md · 七天无理由退货",
       "failure_types": []
     },
     {
@@ -183,8 +192,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 5429,
-      "answer_excerpt": "根据《customer_service_rag_optimized.md》，普通商品的退货退款质检时效为 **1 到 3 个工作日**；大件商品则为 3 到 5 个工作日。质检完成后，微信或支付宝退款通常 1 到 3 个工作日到账，银行卡退款通常 3 到 7 个工作日到账。",
+      "latency_ms": 12959,
+      "answer_excerpt": "普通商品退货退款质检通常需要 1 到 3 个工作日。 质检时效自仓库签收商品后开始计算，大件商品质检时效为 3 到 5 个工作日。 来源：customer_service_rag_optimized.md · 退款到账时效",
       "failure_types": []
     },
     {
@@ -198,8 +207,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 5177,
-      "answer_excerpt": "大件商品退款质检时效为 **3 到 5 个工作日**。 来源：《customer_service_rag_optimized.md》（退款到账时效）",
+      "latency_ms": 12676,
+      "answer_excerpt": "大件商品退款质检时效为 3 到 5 个工作日。 质检自仓库签收后开始，完成后方可进入退款处理流程。 来源：customer_service_rag_optimized.md · 退款到账时效",
       "failure_types": []
     },
     {
@@ -213,8 +222,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 11257,
-      "answer_excerpt": "根据知识库内容，**支付宝退款通常在 1 到 3 个工作日到账**，具体到账时间以支付机构处理结果为准。 *来源：《customer_service_rag_optimized.md》（退款到账时效）*",
+      "latency_ms": 10164,
+      "answer_excerpt": "支付宝退款通常 1 到 3 个工作日到账。 具体到账时间以支付机构处理结果为准。 来源：customer_service_rag_optimized.md · 退款到账时效",
       "failure_types": []
     },
     {
@@ -228,8 +237,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 10048,
-      "answer_excerpt": "根据《customer_service_rag_optimized.md》中的说明： **银行卡退款通常 3 到 7 个工作日到账**，具体到账时间以支付机构处理结果为准。",
+      "latency_ms": 16636,
+      "answer_excerpt": "银行卡退款通常 3 到 7 个工作日到账。 具体到账时间以支付机构处理结果为准。 来源：customer_service_rag_optimized.md · 退款到账时效",
       "failure_types": []
     },
     {
@@ -243,8 +252,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 5444,
-      "answer_excerpt": "根据文档《customer_service_rag_optimized.md》中“发货与物流”部分的说明： 普通商品通常在**付款后 48 小时内发货**；大促期间发货时效可能延长至 **72 小时**；预售商品则按照商品详情页标注的时间发货。",
+      "latency_ms": 6882,
+      "answer_excerpt": "普通商品通常在付款后 48 小时内发货。 大促期间发货时效可能延长至 72 小时；预售商品按照商品详情页标注时间发货。 来源：customer_service_rag_optimized.md · 发货与物流",
       "failure_types": []
     },
     {
@@ -258,8 +267,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 8512,
-      "answer_excerpt": "根据文档《customer_service_rag_optimized.md》中“发货与物流”的说明： 大促期间发货时效可能延长至 **72 小时**（普通商品通常在付款后 48 小时内发货）。",
+      "latency_ms": 25978,
+      "answer_excerpt": "大促期间普通商品发货时效可能延长至 72 小时。 预售商品按商品详情页标注时间发货。 来源：customer_service_rag_optimized.md · 发货与物流",
       "failure_types": []
     },
     {
@@ -273,8 +282,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 13424,
-      "answer_excerpt": "如果商品发货后物流超过 48 小时没有更新，客服应协助您登记物流异常工单，该工单通常在 1 到 2 个工作日内反馈。 来源：《customer_service_rag_optimized.md》（发货与物流）",
+      "latency_ms": 8233,
+      "answer_excerpt": "客服应协助登记物流异常工单，通常在 1 到 2 个工作日内反馈。 关键条件：商品发货后物流超过 48 小时未更新。 来源：customer_service_rag_optimized.md · 发货与物流",
       "failure_types": []
     },
     {
@@ -288,8 +297,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 8863,
-      "answer_excerpt": "根据知识库内容，金卡会员每月可领取 **2 张满 199 减 20 优惠券**，并享受**生日月 9 折券**。 *来源：customer_service_rag_optimized.md*",
+      "latency_ms": 9030,
+      "answer_excerpt": "金卡会员每月可领取 2 张满 199 减 20 优惠券，并享受生日月 9 折券。 生日月额外发放 9 折券。 来源：customer_service_rag_optimized.md · 会员权益",
       "failure_types": []
     },
     {
@@ -303,8 +312,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 13596,
-      "answer_excerpt": "根据文档《customer_service_rag_optimized.md》，金卡会员在生日月可享受 **9 折券**。此外，金卡会员每月还可领取 2 张满 199 减 20 的优惠券。",
+      "latency_ms": 14257,
+      "answer_excerpt": "金卡会员生日月可享受 9 折券。 来源：customer_service_rag_optimized.md · 会员权益",
       "failure_types": []
     },
     {
@@ -318,8 +327,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 5834,
-      "answer_excerpt": "根据知识库中的**会员权益**文档，黑金会员可享受以下权益： - 每月可领取 **3 张满 299 减 40 优惠券** - 享受**专属客服通道** *来源：customer\\_service\\_rag\\_optimized.md（会员权益）*",
+      "latency_ms": 6259,
+      "answer_excerpt": "黑金会员每月可领取 3 张满 299 减 40 优惠券，并享受专属客服通道。 优惠券需每月领取，专属客服通道为黑金会员独享权益。 来源：customer_service_rag_optimized.md · 会员权益",
       "failure_types": []
     },
     {
@@ -333,8 +342,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 4856,
-      "answer_excerpt": "是的，黑金会员享有**专属客服通道**。 来源：**customer_service_rag_optimized.md**（会员权益）",
+      "latency_ms": 9803,
+      "answer_excerpt": "黑金会员可享受专属客服通道。 专属客服通道为黑金会员等级权益之一。 来源：customer_service_rag_optimized.md · 会员权益",
       "failure_types": []
     },
     {
@@ -348,8 +357,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 7662,
-      "answer_excerpt": "根据知识库文档 **customer_service_rag_optimized.md** 中的说明： **积分不可提现。** 积分可在积分商城兑换优惠券和礼品。100 积分可抵扣 1 元，但单笔订单最多抵扣实付金额的 20%。",
+      "latency_ms": 9639,
+      "answer_excerpt": "积分不可提现。 积分可在积分商城兑换优惠券和礼品；100 积分可抵扣 1 元，但单笔订单最多抵扣实付金额的 20%。 来源：customer_service_rag_optimized.md · 积分规则",
       "failure_types": []
     },
     {
@@ -363,8 +372,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 11129,
-      "answer_excerpt": "根据《customer_service_rag_optimized.md》中的**积分规则**： - **100 积分可抵扣 1 元**； - **单笔订单最多抵扣实付金额的 20%**。 此外，积分可在积分商城兑换优惠券和礼品，但**不可提现**。",
+      "latency_ms": 4858,
+      "answer_excerpt": "100 积分可抵扣 1 元订单金额。 单笔订单最多抵扣实付金额的 20%。 来源：customer_service_rag_optimized.md · 积分规则",
       "failure_types": []
     },
     {
@@ -378,8 +387,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 9043,
-      "answer_excerpt": "根据知识库中的**积分规则**说明： 退款订单对应的积分会**扣回**。 > 来源：`customer_service_rag_optimized.md` — 积分规则",
+      "latency_ms": 5327,
+      "answer_excerpt": "退款后积分会扣回。 退款订单对应的积分将予以扣回。 来源：customer_service_rag_optimized.md · 积分规则",
       "failure_types": []
     },
     {
@@ -393,8 +402,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 11583,
-      "answer_excerpt": "可以。根据《customer_service_rag_optimized.md》中“价格保护”的说明： 用户在商品签收后 **7 日内**发现同一商品同规格出现**官方降价**，可以申请价格保护。 不过需要注意，**秒杀、限时抢购、会员专属价以及优惠券差额不计入价保范围**。",
+      "latency_ms": 16257,
+      "answer_excerpt": "商品签收后7日内，如遇同一商品同规格官方降价，可申请价格保护。 关键条件：限签收后7日内且为同一商品同规格官方降价；秒杀、限时抢购、会员专属价及优惠券差额不计入价保范围。 来源：customer_service_rag_optimized.md · 价格保护",
       "failure_types": []
     },
     {
@@ -408,8 +417,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 6935,
-      "answer_excerpt": "根据《customer_service_rag_optimized.md》中的**价格保护**说明，**秒杀价和会员专属价不可以申请价格保护**。 文档明确指出：秒杀、限时抢购、会员专属价、优惠券差额不计入价保范围。",
+      "latency_ms": 5488,
+      "answer_excerpt": "秒杀价和会员专属价不可以申请价格保护。 秒杀、限时抢购、会员专属价及优惠券差额均不计入价保范围。 来源：customer_service_rag_optimized.md · 价格保护",
       "failure_types": []
     },
     {
@@ -423,8 +432,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 7571,
-      "answer_excerpt": "根据知识库内容，若仓库质检完成后同款商品缺货，客服应向用户提供**退款**或**更换同价商品**两种方案，由用户确认后处理。 来源：《customer_service_rag_optimized.md》——换货缺货处理",
+      "latency_ms": 7455,
+      "answer_excerpt": "若仓库质检完成后同款商品缺货，客服应向用户提供退款或更换同价商品两种方案，由用户确认后处理。 关键条件：需以仓库质检完成并确认同款商品缺货为前提。 来源：customer_service_rag_optimized.md · 换货缺货处理",
       "failure_types": []
     },
     {
@@ -438,8 +447,8 @@
       "sources": [
         "customer_service_rag_optimized.md"
       ],
-      "latency_ms": 5554,
-      "answer_excerpt": "根据知识库中的说明，已开具**纸质发票**的订单，退货时需要将**发票随商品一并寄回**；如果是电子发票，则会在退款完成后自动冲红。 *来源：《customer_service_rag_optimized.md》（发票处理）*",
+      "latency_ms": 17047,
+      "answer_excerpt": "已开具纸质发票的订单，退货时需将发票随商品一并寄回。 电子发票无需寄回，退款完成后自动冲红。 来源：customer_service_rag_optimized.md · 发票处理",
       "failure_types": []
     },
     {
@@ -450,11 +459,9 @@
       "overall_pass": true,
       "condition_coverage": 100.0,
       "source_pass": true,
-      "sources": [
-        "customer_service_rag_optimized.md"
-      ],
-      "latency_ms": 8693,
-      "answer_excerpt": "当前知识库中未找到相关信息，建议联系人工客服确认。 （来源：知识库无答案时的处理）",
+      "sources": [],
+      "latency_ms": 12194,
+      "answer_excerpt": "当前知识库中未找到相关信息，建议联系人工客服确认。",
       "failure_types": []
     },
     {
@@ -465,11 +472,9 @@
       "overall_pass": true,
       "condition_coverage": 100.0,
       "source_pass": true,
-      "sources": [
-        "customer_service_rag_optimized.md"
-      ],
-      "latency_ms": 17092,
-      "answer_excerpt": "关于**国际快递退货**（属于海外退货范畴），当前知识库中未找到相关信息，建议联系人工客服确认。 知识库中关于“提现”仅明确以下内容： **积分不可提现**，积分可在积分商城兑换优惠券和礼品（《customer_service_rag_optimized.md》）。如果您询问的是其他提现或退款到账方式，当前知识库未提供相关说明。",
+      "sources": [],
+      "latency_ms": 9544,
+      "answer_excerpt": "当前知识库中未找到相关信息，建议联系人工客服确认。",
       "failure_types": []
     },
     {
@@ -480,11 +485,9 @@
       "overall_pass": true,
       "condition_coverage": 100.0,
       "source_pass": true,
-      "sources": [
-        "customer_service_rag_optimized.md"
-      ],
-      "latency_ms": 8430,
-      "answer_excerpt": "当前知识库中未找到相关信息，建议联系人工客服确认。 （依据《知识库无答案时的处理》：对于“永久免费维修”等知识库没有明确说明的问题，需使用统一模板回复，不得依据外部常识进行推测。）",
+      "sources": [],
+      "latency_ms": 8389,
+      "answer_excerpt": "当前知识库中未找到相关信息，建议联系人工客服确认。",
       "failure_types": []
     },
     {
@@ -495,10 +498,8 @@
       "overall_pass": true,
       "condition_coverage": 100.0,
       "source_pass": true,
-      "sources": [
-        "customer_service_rag_optimized.md"
-      ],
-      "latency_ms": 8333,
+      "sources": [],
+      "latency_ms": 13333,
       "answer_excerpt": "当前知识库中未找到相关信息，建议联系人工客服确认。",
       "failure_types": []
     },
@@ -510,10 +511,8 @@
       "overall_pass": true,
       "condition_coverage": 100.0,
       "source_pass": true,
-      "sources": [
-        "customer_service_rag_optimized.md"
-      ],
-      "latency_ms": 9905,
+      "sources": [],
+      "latency_ms": 26982,
       "answer_excerpt": "当前知识库中未找到相关信息，建议联系人工客服确认。",
       "failure_types": []
     },
@@ -525,11 +524,9 @@
       "overall_pass": true,
       "condition_coverage": 100.0,
       "source_pass": true,
-      "sources": [
-        "customer_service_rag_optimized.md"
-      ],
-      "latency_ms": 6410,
-      "answer_excerpt": "当前知识库中未找到相关信息，建议联系人工客服确认。 *来源：《customer_service_rag_optimized.md》——“知识库无答案时的处理”*",
+      "sources": [],
+      "latency_ms": 6597,
+      "answer_excerpt": "当前知识库中未找到相关信息，建议联系人工客服确认。",
       "failure_types": []
     }
   ]
