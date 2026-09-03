@@ -1,4 +1,4 @@
-import { TRACE_STORAGE_KEY, buildTrace, resolveQuestion } from './rag_logic.mjs?v=rag-ui-live-v1';
+import { TRACE_STORAGE_KEY, buildTrace, isKnowledgeBoundaryRefusal, resolveQuestion } from './rag_logic.mjs?v=rag-ui-live-v2';
 
 const suggestions = [
   { label: '退货运费', question: '质量问题退货时，运费由谁承担？' },
@@ -236,7 +236,9 @@ function parseStreamFrame(frame, output) {
 }
 
 function toLiveResult(answer, rawSources) {
-  const sourceRecords = rawSources.map((source, index) => ({
+  const refusal = isKnowledgeBoundaryRefusal(answer);
+  const effectiveSources = refusal ? [] : rawSources;
+  const sourceRecords = effectiveSources.map((source, index) => ({
     id: `live-source-${index + 1}`,
     section: `来源 ${index + 1}`,
     file: source.title || source.filename || source.source || '知识库文档',
@@ -250,15 +252,15 @@ function toLiveResult(answer, rawSources) {
   return {
     intent: 'live_rag',
     originalQuestion: state.lastQuestion,
-    headline: sourceRecords.length ? '基于知识库的回答' : '知识库边界说明',
+    headline: refusal ? '知识库边界说明' : '基于知识库的回答',
     sections: [{
       title: '答复',
       text: cleanedAnswer || '当前未能生成有效回答，请稍后重试。',
       sourceIds: sourceRecords.map((source) => source.id),
     }],
     sources: sourceRecords,
-    coverage: { total: 1, handled: 1, fullyAnswered: sourceRecords.length ? 1 : 0, status: sourceRecords.length ? 'covered' : 'not_covered' },
-    refusalReason: sourceRecords.length ? null : 'knowledge_boundary',
+    coverage: { total: 1, handled: refusal ? 0 : 1, fullyAnswered: refusal ? 0 : 1, status: refusal ? 'not_covered' : 'covered' },
+    refusalReason: refusal ? 'knowledge_boundary' : null,
   };
 }
 

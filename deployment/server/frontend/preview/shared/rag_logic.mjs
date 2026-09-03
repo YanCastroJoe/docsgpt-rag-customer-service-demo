@@ -1,4 +1,11 @@
 export const TRACE_STORAGE_KEY = 'docsgpt_rag_preview_traces_v2';
+export const KNOWLEDGE_ABSTENTION_START = '当前知识库中未找到相关信息';
+export const KNOWLEDGE_ABSTENTION_END = '建议联系人工客服确认';
+
+export function isKnowledgeBoundaryRefusal(answer) {
+  const text = String(answer || '').trim();
+  return text.includes(KNOWLEDGE_ABSTENTION_START) && text.includes(KNOWLEDGE_ABSTENTION_END);
+}
 
 const FILE = 'customer_service_rag_optimized.md';
 

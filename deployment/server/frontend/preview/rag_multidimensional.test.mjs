@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildTrace, normalizeQuestion, resolveQuestion } from './shared/rag_logic.mjs';
+import { buildTrace, isKnowledgeBoundaryRefusal, normalizeQuestion, resolveQuestion } from './shared/rag_logic.mjs';
 
 const answerText = (result) => result.sections.map((item) => item.text).join(' ');
 
@@ -98,4 +98,15 @@ test('RAG-X09 every refusal or knowledge-boundary miss has zero sources', () => 
     assert.ok(['refused', 'not_covered'].includes(result.coverage.status));
     assert.equal(result.sources.length, 0);
   });
+});
+
+test('RAG-X10 live standard refusal is recognized before sources are rendered', () => {
+  assert.equal(
+    isKnowledgeBoundaryRefusal('当前知识库中未找到相关信息，建议联系人工客服确认。'),
+    true,
+  );
+  assert.equal(
+    isKnowledgeBoundaryRefusal('根据知识库可回答退货运费，其他信息建议联系人工客服确认。'),
+    false,
+  );
 });

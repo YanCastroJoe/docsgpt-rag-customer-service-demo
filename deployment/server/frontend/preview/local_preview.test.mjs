@@ -38,6 +38,8 @@ test('cloud demo mode loads the shared Agent and streams real answers', () => {
   assert.match(script, /save_conversation: false/);
   assert.match(script, /event\.type === 'source'/);
   assert.match(script, /'type': 'thought'/);
+  assert.match(script, /const effectiveSources = refusal \? \[\] : rawSources/);
+  assert.match(script, /refusalReason: refusal \? 'knowledge_boundary' : null/);
   assert.match(nginx, /default_type application\/javascript/);
   assert.match(nginx, /absolute_redirect off/);
   assert.match(dockerfile, /chmod -R a\+rX/);
