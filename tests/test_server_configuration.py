@@ -98,6 +98,8 @@ class ServerConfigurationTests(unittest.TestCase):
         self.assertNotIn("127.0.0.1:7091", check_script)
         self.assertIn("docsgpt-demo-worker", check_script)
         self.assertIn("auth_args", check_script)
+        self.assertIn("effectiveSources = refusal ? [] : rawSources", check_script)
+        self.assertIn("isKnowledgeBoundaryRefusal", check_script)
 
     def test_public_environment_example_contains_no_secret_values(self):
         example = (ROOT / "deployment/server/.env.example").read_text(

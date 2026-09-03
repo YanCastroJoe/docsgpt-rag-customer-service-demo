@@ -35,15 +35,18 @@ check_url 'DocsGPT RAG Ops' "${docsgpt_ops_url}"
 
 demo_html="$(curl "${auth_args[@]}" -L -sS --connect-timeout 5 --max-time 20 "${docsgpt_entry_url}")"
 demo_script="$(curl "${auth_args[@]}" -sS --connect-timeout 5 --max-time 20 "${docsgpt_base_url%/}/demo/app.js")"
+demo_logic="$(curl "${auth_args[@]}" -sS --connect-timeout 5 --max-time 20 "${docsgpt_base_url%/}/demo/rag_logic.mjs")"
 if [[ "${demo_html}" != *'售后智能助手'* ]] || \
   [[ "${demo_html}" != *'在线咨询'* ]] || \
   [[ "${demo_html}" == *'__SHARED_AGENT_TOKEN__'* ]] || \
   [[ "${demo_script}" != *"fetch('/stream'"* ]] || \
-  [[ "${demo_script}" != *'/api/shared_agent?token='* ]]; then
+  [[ "${demo_script}" != *'/api/shared_agent?token='* ]] || \
+  [[ "${demo_script}" != *'effectiveSources = refusal ? [] : rawSources'* ]] || \
+  [[ "${demo_logic}" != *'isKnowledgeBoundaryRefusal'* ]]; then
   printf '[FAIL] DocsGPT business UI is missing or not connected to the shared Agent\n' >&2
   exit 1
 fi
-printf '[PASS] DocsGPT business UI serves the live shared-Agent experience\n'
+printf '[PASS] DocsGPT business UI serves the live shared-Agent experience and hides refusal sources\n'
 
 docsgpt_frontend_url="${docsgpt_base_url%/}/agents/shared/${shared_agent_token}"
 frontend_html="$(curl "${auth_args[@]}" -sS --connect-timeout 5 --max-time 20 "${docsgpt_frontend_url}")"
