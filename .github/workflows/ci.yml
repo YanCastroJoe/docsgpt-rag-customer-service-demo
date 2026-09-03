@@ -1,0 +1,29 @@
+name: DocsGPT RAG CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run Node UI and rule tests
+        shell: bash
+        run: node --test $(find deployment/server/frontend -name '*.test.mjs' -print)
+      - name: Run Python configuration and evaluation tests
+        run: python -m unittest discover -s tests -p "test_*.py" -v
+      - name: Validate evaluation dataset
+        run: python scripts/evaluate_rag.py --validate-only

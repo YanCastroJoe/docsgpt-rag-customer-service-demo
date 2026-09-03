@@ -1,5 +1,6 @@
 import unittest
 import json
+import re
 import tempfile
 from pathlib import Path
 
@@ -20,6 +21,9 @@ class ServerConfigurationTests(unittest.TestCase):
         self.assertIn("'{retrieval}'", sql)
         self.assertIn('{"retriever":"hybrid","rephrase_query":false}', sql)
         self.assertNotIn("a0905d7f-0bf5-5d8d-acb4-bd6548b6c257", sql)
+        self.assertIn(":'agent_id'::uuid", sql)
+        self.assertIn(":'source_id'::uuid", sql)
+        self.assertIsNone(re.search(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", sql, re.I))
 
     def test_optimized_source_contains_seven_day_return_policy(self):
         knowledge = (ROOT / "knowledge_base/customer_service_rag_optimized.md").read_text(
@@ -85,6 +89,8 @@ class ServerConfigurationTests(unittest.TestCase):
         self.assertIn('DOCFLOW_DEMO_MODE "true"', deploy)
         self.assertIn(".demo-htpasswd", deploy)
         self.assertIn("backend worker frontend", deploy)
+        self.assertIn("DOCSGPT_AGENT_ID", deploy)
+        self.assertIn("DOCSGPT_SOURCE_ID", deploy)
 
         check_script = (ROOT / "deployment/server/check-public-demos.sh").read_text(
             encoding="utf-8"
@@ -99,6 +105,8 @@ class ServerConfigurationTests(unittest.TestCase):
         )
         self.assertIn("DOCSGPT_BIND_ADDRESS=127.0.0.1", example)
         self.assertIn("SHARED_AGENT_TOKEN=replace-with-random-token", example)
+        self.assertIn("DOCSGPT_AGENT_ID=replace-with-agent-uuid", example)
+        self.assertIn("DOCSGPT_SOURCE_ID=replace-with-source-uuid", example)
         self.assertNotIn("124.221.243.125", example)
 
     def test_public_result_sanitizer_removes_session_identifiers(self):
@@ -122,6 +130,16 @@ class ServerConfigurationTests(unittest.TestCase):
             self.assertNotIn("conversation_id", sanitized)
             self.assertNotIn("session_id", sanitized["nested"])
             self.assertTrue(sanitized["conversation_id_redacted"])
+
+    def test_tracked_public_evaluation_results_contain_no_conversation_ids(self):
+        responses = ROOT / "evaluation" / "responses"
+        for path in sorted(responses.glob("*.public.jsonl")):
+            with self.subTest(path=path.name):
+                for line in path.read_text(encoding="utf-8").splitlines():
+                    if line.strip():
+                        self.assertNotIn('"conversation_id":', line)
+        manifest = (ROOT / "evaluation" / "run_manifest.json").read_text(encoding="utf-8")
+        self.assertNotIn('"agent_id"', manifest)
 
 
 if __name__ == "__main__":

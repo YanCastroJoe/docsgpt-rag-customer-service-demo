@@ -28,7 +28,7 @@ UPDATE agents
 SET chunks = 2,
     retriever = 'hybrid',
     extra_source_ids = ARRAY[
-      'c5a6debe-e87d-5cb0-ba47-a183a20ab7b1'::uuid
+      :'source_id'::uuid
     ],
     prompt_id = (
       SELECT id FROM prompts
@@ -36,8 +36,11 @@ SET chunks = 2,
       ORDER BY updated_at DESC
       LIMIT 1
     ),
+    shared = true,
+    shared_token = :'shared_agent_token',
+    shared_metadata = jsonb_build_object('shared_by', 'Demo', 'purpose', 'interview_demo'),
     updated_at = now()
-WHERE id = '23d42c6b-bba6-4baa-ba87-aef53df8a0ae';
+WHERE id = :'agent_id'::uuid;
 
 UPDATE sources
 SET retriever = 'hybrid',
@@ -52,14 +55,14 @@ SET retriever = 'hybrid',
 WHERE id = ANY (
   SELECT unnest(extra_source_ids)
   FROM agents
-  WHERE id = '23d42c6b-bba6-4baa-ba87-aef53df8a0ae'
+  WHERE id = :'agent_id'::uuid
 );
 
 DO $verify$
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM agents
-    WHERE id = '23d42c6b-bba6-4baa-ba87-aef53df8a0ae'
+    WHERE id = :'agent_id'::uuid
       AND chunks = 2
       AND retriever = 'hybrid'
       AND prompt_id IS NOT NULL
@@ -72,7 +75,7 @@ BEGIN
     WHERE id = ANY (
       SELECT unnest(extra_source_ids)
       FROM agents
-      WHERE id = '23d42c6b-bba6-4baa-ba87-aef53df8a0ae'
+      WHERE id = :'agent_id'::uuid
     )
       AND COALESCE(config #>> '{retrieval,retriever}', '') <> 'hybrid'
   ) THEN
@@ -84,7 +87,7 @@ BEGIN
     WHERE id = ANY (
       SELECT unnest(extra_source_ids)
       FROM agents
-      WHERE id = '23d42c6b-bba6-4baa-ba87-aef53df8a0ae'
+      WHERE id = :'agent_id'::uuid
     )
       AND COALESCE((config #>> '{retrieval,rephrase_query}')::boolean, true)
   ) THEN

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.1",
   "cases_file": "evaluation/test_cases.json",
-  "responses_file": "evaluation/responses/v2-2026-08-07.jsonl",
+  "responses_file": "evaluation/responses/v2-2026-08-07.public.jsonl",
   "total_cases": 30,
   "submitted_cases": 30,
   "answer_cases_submitted": 24,

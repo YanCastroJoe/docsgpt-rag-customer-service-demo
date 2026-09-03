@@ -8,6 +8,15 @@ docsgpt_dir="${base_dir}/docsgpt"
 
 : "${DOCFLOW_PUBLIC_URL:?Set DOCFLOW_PUBLIC_URL, for example https://docflow.example.com}"
 : "${DOCSGPT_PUBLIC_URL:?Set DOCSGPT_PUBLIC_URL, for example https://rag.example.com}"
+: "${DOCSGPT_AGENT_ID:?Set DOCSGPT_AGENT_ID to the restored demo Agent UUID}"
+: "${DOCSGPT_SOURCE_ID:?Set DOCSGPT_SOURCE_ID to the restored demo Source UUID}"
+
+for archive in /tmp/docflow.tar.gz /tmp/docsgpt-server.tar.gz; do
+  if [[ ! -f "${archive}" ]]; then
+    printf 'Required deployment archive is missing: %s\n' "${archive}" >&2
+    exit 1
+  fi
+done
 
 upsert_env() {
   local file="$1"
@@ -30,6 +39,17 @@ upsert_env() {
 install -d -m 0755 "${docflow_dir}" "${docsgpt_dir}"
 tar -xzf /tmp/docflow.tar.gz -C "${docflow_dir}"
 tar -xzf /tmp/docsgpt-server.tar.gz -C "${docsgpt_dir}"
+
+for artifact in \
+  "${docsgpt_dir}/migration/indexes" \
+  "${docsgpt_dir}/migration/inputs" \
+  "${docsgpt_dir}/migration/vectors" \
+  "${docsgpt_dir}/migration/docsgpt-demo.dump"; do
+  if [[ ! -e "${artifact}" ]]; then
+    printf 'Required private migration artifact is missing: %s\n' "${artifact}" >&2
+    exit 1
+  fi
+done
 
 install -d -m 0755 "${docsgpt_dir}/data"
 cp -a "${docsgpt_dir}/migration/indexes" "${docsgpt_dir}/data/"
@@ -110,11 +130,11 @@ fi
 
 docker cp configure-public-agent.sql docsgpt-demo-postgres:/tmp/configure-public-agent.sql
 docker compose --env-file .env -f docker-compose.public.yml exec -T postgres \
-  psql -U docsgpt -d docsgpt -f /tmp/configure-public-agent.sql
-
-docker compose --env-file .env -f docker-compose.public.yml exec -T postgres \
   psql -U docsgpt -d docsgpt -v ON_ERROR_STOP=1 \
-  -c "UPDATE agents SET shared = true, shared_token = '${shared_agent_token}', shared_metadata = jsonb_build_object('shared_by', 'Demo', 'purpose', 'interview_demo') WHERE id = '23d42c6b-bba6-4baa-ba87-aef53df8a0ae';"
+  -v agent_id="${DOCSGPT_AGENT_ID}" \
+  -v source_id="${DOCSGPT_SOURCE_ID}" \
+  -v shared_agent_token="${shared_agent_token}" \
+  -f /tmp/configure-public-agent.sql
 
 docker compose --env-file .env -f docker-compose.public.yml up -d --no-build backend worker frontend
 

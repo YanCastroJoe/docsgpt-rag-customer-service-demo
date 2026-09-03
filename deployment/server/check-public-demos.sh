@@ -67,10 +67,10 @@ agent = json.loads(os.environ["SHARED_AGENT_JSON"])
 if not agent.get("sources"):
     print("[FAIL] Shared Agent has no multi-source bindings", file=sys.stderr)
     raise SystemExit(1)
-if agent.get("retriever") != "hybrid" or str(agent.get("chunks")) != "8":
+if agent.get("retriever") != "hybrid" or str(agent.get("chunks")) != "2":
     print("[FAIL] Shared Agent retrieval configuration drifted", file=sys.stderr)
     raise SystemExit(1)
-print("[PASS] Shared Agent retains sources, hybrid retrieval and 8 chunks")
+print("[PASS] Shared Agent retains sources, hybrid retrieval and 2 chunks")
 PY
 
 for container in \

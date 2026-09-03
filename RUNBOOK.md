@@ -18,9 +18,10 @@
 cd E:\codex
 git clone https://github.com/arc53/DocsGPT.git
 cd DocsGPT
+git checkout 3e978759de1cfe81113013097fa1667e83fdfd27
 ```
 
-如果已经手动下载 DocsGPT，只需进入项目目录即可。
+该提交是本项目完成本地复现与补丁验证时使用的上游版本（`0.18.0-81-g3e978759`）。如果使用其他 DocsGPT 版本，需要重新验证目录结构、数据库迁移、共享 Agent 接口和补丁兼容性，不能默认沿用本项目测试结果。
 
 ## 3. 启动 Docker Desktop
 
@@ -108,6 +109,7 @@ http://localhost:5173
 - `.env`、`.demo-password`、`.demo-htpasswd`、共享 Agent token、数据库目录和 `evaluation/results/` 原始会话均不得提交 Git。
 - 访问口令只是低频面试 Demo 的入口保护，不等同于用户登录、RBAC 或生产级多租户鉴权。
 - 使用 `deployment/server/Caddyfile.example` 配置 TLS 域名；部署脚本要求显式传入 `DOCFLOW_PUBLIC_URL` 与 `DOCSGPT_PUBLIC_URL`，不接受写死公网 IP。
+- 完整公网部署还依赖不进入 Git 的数据库、索引和 Source/Agent 标识，具体前置材料见 [`deployment/server/README.md`](deployment/server/README.md)。公开仓库本身不是包含业务数据的一键恢复包。
 
 ## 8. 上传知识库
 

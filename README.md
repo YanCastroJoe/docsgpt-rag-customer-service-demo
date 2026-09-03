@@ -1,5 +1,7 @@
 # DocsGPT 企业知识库 RAG 智能客服
 
+[![DocsGPT RAG CI](https://github.com/YanCastroJoe/docsgpt-rag-customer-service-demo/actions/workflows/ci.yml/badge.svg)](https://github.com/YanCastroJoe/docsgpt-rag-customer-service-demo/actions/workflows/ci.yml)
+
 > 基于开源 DocsGPT 完成企业售后知识库部署、中文检索优化、知识边界约束与可复跑评测。
 
 本仓库记录的是 DocsGPT 的场景化落地与工程改造，不是自研 RAG 框架，也不是 DocsGPT 源码的二次发布。个人工作集中在部署配置、知识库建设、Agent/Prompt 调试、检索优化、产品界面、故障定位和评测闭环。
@@ -92,9 +94,11 @@ flowchart LR
 | 知识边界拒答率 | 83.3% | 100.0% | 83.3% | 100.0% |
 | 端到端通过率 | 93.3% | 93.3% | 96.7% | 100.0% |
 
-四轮均提交了同一批 30/30 条真实回答。2026-07-21 的历史回答使用 1.1 版评分口径重新计算；V2 与 V3 于 2026-08-07 全量运行。这里的 100% 只表示该固定小规模回归集的一次真实运行全部通过，不能外推为生产准确率。完整结果见 [四版本评测报告](evaluation/reports/four-version-comparison-2026-08-07.md)。
+四轮均提交了同一批 30/30 条真实回答。2026-07-21 的历史回答使用 1.1 版评分口径重新计算；V2 与 V3 于 2026-08-07 全量运行。该历史对比发生在“拒答清空 Sources”补丁之前，边界题零来源只以 2026-09-03 复测为准。这里的 100% 只表示固定小规模回归集的一次真实运行全部通过，不能外推为生产准确率。完整结果见 [四版本评测报告](evaluation/reports/four-version-comparison-2026-08-07.md)。
 
-2026-09-03 本地代码回归：Node 前端/规则测试 37/37、Python 配置与评测测试 29/29。该结果覆盖静态预览逻辑、口语归一化、拒答零来源、来源一致性、发布端口、访问保护、Worker 配置和结果脱敏，但不等于重新执行了真实向量检索或 LLM 在线评测。
+2026-09-03 在混合检索与来源过滤补丁后重新采集了 30 条真实 API 回答：固定集端到端 30/30，知识边界题均为零 Sources，P50 9.803 秒、P95 25.978 秒。该结果是一次真实回答快照，不能视为实时性能或线上 SLA；详见[来源过滤复测报告](evaluation/reports/live-validation-chunk-filtered-2026-09-03.md)。
+
+2026-09-03 本地代码回归：Node 前端/规则测试 37/37、Python 配置与评测测试 30/30。该结果覆盖静态预览逻辑、口语归一化、拒答零来源、来源一致性、发布端口、访问保护、Worker 配置和结果脱敏，但不等于重新执行了真实向量检索或 LLM 在线评测。
 
 ```powershell
 # 校验评测集
@@ -158,4 +162,4 @@ TROUBLESHOOTING.md     故障定位记录
 
 ## 开源说明
 
-上游项目：[arc53/DocsGPT](https://github.com/arc53/DocsGPT)。DocsGPT 源码及其许可证以官方仓库为准；本仓库只保存本项目新增的部署配置、知识库样例、补丁、评测脚本、测试和复盘文档。
+上游项目：[arc53/DocsGPT](https://github.com/arc53/DocsGPT)。DocsGPT 源码及其许可证以官方仓库为准；本仓库只保存本项目新增的部署配置、知识库样例、补丁、评测脚本、测试和复盘文档。原创内容采用 [MIT License](LICENSE)，第三方归属见 [NOTICE](NOTICE.md)。

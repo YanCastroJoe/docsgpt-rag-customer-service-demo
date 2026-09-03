@@ -56,13 +56,15 @@ Worker failed to boot
 
 处理方式：
 
-先清理并重新按顺序启动：
+先停止服务并重新按顺序启动。只有确认可以永久删除当前 PostgreSQL、向量索引和容器卷数据时，才允许使用带 `-v` 的命令；该操作不可逆，不应作为普通重启步骤：
 
 ```powershell
-docker compose --env-file .\.env -f .\deployment\docker-compose-hub.yaml down -v
+docker compose --env-file .\.env -f .\deployment\docker-compose-hub.yaml down
 docker compose --env-file .\.env -f .\deployment\docker-compose-hub.yaml up -d postgres redis
 docker compose --env-file .\.env -f .\deployment\docker-compose-hub.yaml up backend
 ```
+
+若数据库迁移冲突只能通过重建环境处理，请先备份所需数据，再显式执行 `down -v`。
 
 后端迁移完成后，再启动：
 

@@ -32,6 +32,9 @@ class ObservabilitySnapshotTests(unittest.TestCase):
         self.assertIn("SET chunks = 2", sql)
         self.assertIn("Sources 与问题不相关", sql)
         self.assertIn("<实际命中的文件名>", sql)
+        check_script = (ROOT / "deployment" / "server" / "check-public-demos.sh").read_text(encoding="utf-8")
+        self.assertIn('str(agent.get("chunks")) != "2"', check_script)
+        self.assertNotIn('str(agent.get("chunks")) != "8"', check_script)
 
     def test_snapshot_uses_latest_run_and_removes_conversation_ids(self):
         payload = observability.build_snapshot(
