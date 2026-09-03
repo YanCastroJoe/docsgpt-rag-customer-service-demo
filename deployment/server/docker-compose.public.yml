@@ -38,6 +38,7 @@ services:
     build:
       context: ./overrides
       dockerfile: Dockerfile
+    image: docsgpt-demo-backend:optimized
     container_name: docsgpt-demo-backend
     restart: unless-stopped
     environment:
@@ -58,7 +59,7 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-    mem_limit: 1024m
+    mem_limit: 1536m
     cpus: 1.00
     pids_limit: 256
     security_opt:
@@ -73,7 +74,7 @@ services:
     image: docsgpt-demo-backend:optimized
     container_name: docsgpt-demo-worker
     restart: unless-stopped
-    command: celery -A application.app.celery worker -l INFO -B -Q docsgpt,parsing
+    command: celery -A application.app.celery worker -l INFO -Q docsgpt,parsing --pool=solo --concurrency=1 --prefetch-multiplier=1
     environment:
       LLM_PROVIDER: docsgpt
       INTERNAL_KEY: ${INTERNAL_KEY:?INTERNAL_KEY is required}
@@ -90,7 +91,7 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-    mem_limit: 640m
+    mem_limit: 1024m
     cpus: 0.50
     pids_limit: 192
     security_opt:
@@ -150,3 +151,4 @@ services:
 
 volumes:
   postgres_data:
+    name: docsgpt_public_v2_postgres_data

@@ -8,6 +8,8 @@ const logic = readFileSync(new URL('./shared/rag_logic.mjs', import.meta.url), '
 const styles = readFileSync(new URL('./shared/styles.css', import.meta.url), 'utf8');
 const opsHtml = readFileSync(new URL('../ops/index.html', import.meta.url), 'utf8');
 const opsScript = readFileSync(new URL('../ops/app.js', import.meta.url), 'utf8');
+const nginx = readFileSync(new URL('../nginx.conf', import.meta.url), 'utf8');
+const dockerfile = readFileSync(new URL('../Dockerfile', import.meta.url), 'utf8');
 
 test('shared preview behaves like a customer product surface', () => {
   assert.match(html, /售后智能助手/);
@@ -27,6 +29,18 @@ test('shared preview exposes real-field source details without inventing chunk d
   assert.match(logic, /customer_service_rag_optimized\.md/);
   assert.match(script, /本地静态预览未提供/);
   assert.match(script, /不适用（确定性规则预览）/);
+});
+
+test('cloud demo mode loads the shared Agent and streams real answers', () => {
+  assert.match(html, /name="shared-agent-token"/);
+  assert.match(script, /\/api\/shared_agent\?token=/);
+  assert.match(script, /fetch\('\/stream'/);
+  assert.match(script, /save_conversation: false/);
+  assert.match(script, /event\.type === 'source'/);
+  assert.match(script, /'type': 'thought'/);
+  assert.match(nginx, /default_type application\/javascript/);
+  assert.match(nginx, /absolute_redirect off/);
+  assert.match(dockerfile, /chmod -R a\+rX/);
 });
 
 test('shared preview provides recovery, feedback and duplicate-submit protection', () => {

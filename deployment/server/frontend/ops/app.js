@@ -1,4 +1,4 @@
-import { TRACE_STORAGE_KEY } from '../preview/shared/rag_logic.mjs?v=20260903-1';
+import { TRACE_STORAGE_KEY } from '../preview/shared/rag_logic.mjs?v=rag-ui-live-v1';
 
 const text = (value, fallback = '当前记录未提供') => value === null || value === undefined || value === '' ? fallback : String(value);
 const rate = (value) => value === null || value === undefined ? '--' : `${Number(value).toFixed(value % 1 ? 1 : 0)}%`;

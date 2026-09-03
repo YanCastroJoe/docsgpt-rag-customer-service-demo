@@ -27,6 +27,7 @@ WHERE name = '企业客服RAG回答模板';
 UPDATE agents
 SET chunks = 2,
     retriever = 'hybrid',
+    key = :'agent_api_key',
     extra_source_ids = ARRAY[
       :'source_id'::uuid
     ],
@@ -58,13 +59,22 @@ WHERE id = ANY (
   WHERE id = :'agent_id'::uuid
 );
 
+-- psql does not expand :variables inside a dollar-quoted PL/pgSQL block.
+-- Store the identifier as a session-scoped custom setting so the independent
+-- verification block can still fail the deployment atomically on a mismatch.
+SELECT set_config('docsgpt.deploy_agent_id', :'agent_id', false) IS NOT NULL
+  AS deploy_agent_id_set;
+SELECT set_config('docsgpt.deploy_agent_key', :'agent_api_key', false) IS NOT NULL
+  AS deploy_agent_key_set;
+
 DO $verify$
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM agents
-    WHERE id = :'agent_id'::uuid
+    WHERE id = current_setting('docsgpt.deploy_agent_id')::uuid
       AND chunks = 2
       AND retriever = 'hybrid'
+      AND key = current_setting('docsgpt.deploy_agent_key')
       AND prompt_id IS NOT NULL
   ) THEN
     RAISE EXCEPTION 'Public V3 agent configuration was not applied';
@@ -75,7 +85,7 @@ BEGIN
     WHERE id = ANY (
       SELECT unnest(extra_source_ids)
       FROM agents
-      WHERE id = :'agent_id'::uuid
+      WHERE id = current_setting('docsgpt.deploy_agent_id')::uuid
     )
       AND COALESCE(config #>> '{retrieval,retriever}', '') <> 'hybrid'
   ) THEN
@@ -87,7 +97,7 @@ BEGIN
     WHERE id = ANY (
       SELECT unnest(extra_source_ids)
       FROM agents
-      WHERE id = :'agent_id'::uuid
+      WHERE id = current_setting('docsgpt.deploy_agent_id')::uuid
     )
       AND COALESCE((config #>> '{retrieval,rephrase_query}')::boolean, true)
   ) THEN

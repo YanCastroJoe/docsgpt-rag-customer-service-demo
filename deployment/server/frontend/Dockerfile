@@ -13,8 +13,11 @@ FROM nginx:1.27.5-alpine
 COPY nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY ops /usr/share/nginx/html/ops
+COPY preview /usr/share/nginx/html/preview
+COPY preview/shared /usr/share/nginx/html/demo
 COPY demo-shell.css /usr/share/nginx/html/demo-shell.css
 COPY demo-shell.js /usr/share/nginx/html/demo-shell.js
 COPY demo-entry.html /usr/share/nginx/html/demo-entry.html
+RUN chmod -R a+rX /usr/share/nginx/html/demo /usr/share/nginx/html/ops /usr/share/nginx/html/preview
 
 EXPOSE 5173

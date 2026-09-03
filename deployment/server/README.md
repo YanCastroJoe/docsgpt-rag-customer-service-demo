@@ -9,6 +9,7 @@
 - `/tmp/docflow.tar.gz`：DocFlow 应用发布包。
 - `/tmp/docsgpt-server.tar.gz`：DocsGPT 服务器发布包，解压后包含 `migration/indexes`、`migration/inputs`、`migration/vectors` 与 `migration/docsgpt-demo.dump`。
 - `DOCFLOW_PUBLIC_URL`、`DOCSGPT_PUBLIC_URL`：已经规划的 HTTPS 域名。
+- 部署脚本会把 `DOCSGPT_PUBLIC_URL` 写入前端构建配置，确保共享问答页连接当前部署的 API，而不是上游默认地址；前端网关同时转发 `/api/*` 与流式回答入口 `/stream`。
 - `DOCSGPT_AGENT_ID`、`DOCSGPT_SOURCE_ID`：私有数据库恢复后对应的演示 Agent 与 Source UUID。
 
 示例变量只用于说明，真实值不得提交 Git：

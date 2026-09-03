@@ -7,8 +7,8 @@ docsgpt_api_url="${docsgpt_base_url%/}/api/health"
 docsgpt_entry_url="${docsgpt_base_url%/}/demo"
 docsgpt_ops_url="${docsgpt_base_url%/}/ops/"
 
-if [[ ! -f .demo-username || ! -f .demo-password || ! -f .shared-agent-token ]]; then
-  printf '[FAIL] Missing demo credentials or shared Agent token\n' >&2
+if [[ ! -f .demo-username || ! -f .demo-password || ! -f .shared-agent-token || ! -f .agent-api-key ]]; then
+  printf '[FAIL] Missing demo credentials, shared Agent token or Agent API key\n' >&2
   exit 1
 fi
 demo_username="$(tr -d '\r\n' <.demo-username)"
@@ -33,6 +33,18 @@ check_url 'DocsGPT API' "${docsgpt_api_url}"
 check_url 'DocsGPT entry' "${docsgpt_entry_url}"
 check_url 'DocsGPT RAG Ops' "${docsgpt_ops_url}"
 
+demo_html="$(curl "${auth_args[@]}" -L -sS --connect-timeout 5 --max-time 20 "${docsgpt_entry_url}")"
+demo_script="$(curl "${auth_args[@]}" -sS --connect-timeout 5 --max-time 20 "${docsgpt_base_url%/}/demo/app.js")"
+if [[ "${demo_html}" != *'售后智能助手'* ]] || \
+  [[ "${demo_html}" != *'在线咨询'* ]] || \
+  [[ "${demo_html}" == *'__SHARED_AGENT_TOKEN__'* ]] || \
+  [[ "${demo_script}" != *"fetch('/stream'"* ]] || \
+  [[ "${demo_script}" != *'/api/shared_agent?token='* ]]; then
+  printf '[FAIL] DocsGPT business UI is missing or not connected to the shared Agent\n' >&2
+  exit 1
+fi
+printf '[PASS] DocsGPT business UI serves the live shared-Agent experience\n'
+
 docsgpt_frontend_url="${docsgpt_base_url%/}/agents/shared/${shared_agent_token}"
 frontend_html="$(curl "${auth_args[@]}" -sS --connect-timeout 5 --max-time 20 "${docsgpt_frontend_url}")"
 if [[ "${frontend_html}" != *'/assets/'* ]] || \
@@ -46,7 +58,7 @@ printf '[PASS] DocsGPT frontend serves hashed production assets\n'
 
 ops_html="$(curl "${auth_args[@]}" -sS --connect-timeout 5 --max-time 20 "${docsgpt_ops_url}")"
 ops_data="$(curl "${auth_args[@]}" -sS --connect-timeout 5 --max-time 20 "${docsgpt_ops_url}data.json")"
-if [[ "${ops_html}" != *'企业知识库 RAG 诊断台'* ]] || \
+if [[ "${ops_html}" != *'RAG 诊断台'* ]] || \
   [[ "${ops_html}" != *'href="/demo"'* ]] || \
   [[ "${ops_data}" != *'fixed_evaluation_snapshot'* ]]; then
   printf '[FAIL] DocsGPT RAG Ops assets are incomplete\n' >&2

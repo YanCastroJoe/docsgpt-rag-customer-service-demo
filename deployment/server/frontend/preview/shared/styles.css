@@ -50,6 +50,7 @@ button:focus-visible, textarea:focus-visible, a:focus-visible, summary:focus-vis
 .answer-section:first-of-type { border-top: 0; }
 .answer-section h3 { margin: 0 0 5px; color: #273044; font-size: 13px; }
 .answer-section p { margin-bottom: 5px; }
+.answer-section p { white-space: pre-line; }
 .coverage-badge { margin: 8px 0 4px; padding: 8px 10px; border-radius: 8px; color: #2d3f73; background: #f0f2ff; font-size: 11px; font-weight: 750; }
 .coverage-badge.partial_answer { color: #875f16; background: #fff7e4; }
 .source-reference { margin-left: 2px; padding: 1px 5px; border: 0; border-radius: 5px; color: #5148d8; background: #eeedff; font-size: 11px; font-weight: 800; vertical-align: baseline; }

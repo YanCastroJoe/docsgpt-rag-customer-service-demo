@@ -1,4 +1,4 @@
-import { TRACE_STORAGE_KEY, buildTrace, resolveQuestion } from './rag_logic.mjs?v=20260903-1';
+import { TRACE_STORAGE_KEY, buildTrace, resolveQuestion } from './rag_logic.mjs?v=rag-ui-live-v1';
 
 const suggestions = [
   { label: '退货运费', question: '质量问题退货时，运费由谁承担？' },
@@ -7,7 +7,9 @@ const suggestions = [
   { label: '能力范围', question: '我可以问任何问题吗？' },
 ];
 
-const state = { busy: false, lastQuestion: '', previewEvents: [] };
+const sharedAgentToken = document.querySelector('meta[name="shared-agent-token"]')?.content?.trim() || '';
+const liveMode = Boolean(sharedAgentToken && sharedAgentToken !== '__SHARED_AGENT_TOKEN__');
+const state = { busy: false, lastQuestion: '', previewEvents: [], agent: null };
 window.__ragPreviewEvents = state.previewEvents;
 
 const input = document.querySelector('#question-input');
@@ -17,6 +19,8 @@ const welcomePanel = document.querySelector('#welcome-panel');
 const sendButton = document.querySelector('#send-button');
 const composerStatus = document.querySelector('#composer-status');
 const toast = document.querySelector('#toast');
+const serviceStatus = document.querySelector('.service-status strong');
+const serviceDetail = document.querySelector('.service-status small');
 
 const createElement = (tag, className, text) => {
   const node = document.createElement(tag);
@@ -64,14 +68,14 @@ function appendLoading() {
 }
 
 function openSource(sourceRecord) {
-  const unavailable = '本地静态预览未提供';
-  document.querySelector('#source-index').textContent = sourceRecord.section;
-  document.querySelector('#source-file').textContent = sourceRecord.file;
-  document.querySelector('#source-version').textContent = '边界增强V3 · 本地知识快照';
-  document.querySelector('#source-chunk').textContent = unavailable;
-  document.querySelector('#source-snippet').textContent = sourceRecord.snippet;
-  document.querySelector('#source-location').textContent = sourceRecord.location;
-  document.querySelector('#source-score').textContent = '不适用（确定性规则预览）';
+  const unavailable = liveMode ? '当前接口未提供' : '本地静态预览未提供';
+  document.querySelector('#source-index').textContent = sourceRecord.section || '回答依据';
+  document.querySelector('#source-file').textContent = sourceRecord.file || unavailable;
+  document.querySelector('#source-version').textContent = sourceRecord.version || (liveMode ? '当前云端知识库' : '边界增强V3 · 本地知识快照');
+  document.querySelector('#source-chunk').textContent = sourceRecord.chunk || unavailable;
+  document.querySelector('#source-snippet').textContent = sourceRecord.snippet || unavailable;
+  document.querySelector('#source-location').textContent = sourceRecord.location || unavailable;
+  document.querySelector('#source-score').textContent = sourceRecord.score || (liveMode ? unavailable : '不适用（确定性规则预览）');
   document.querySelector('#drawer-backdrop').hidden = false;
   document.querySelector('#source-drawer').hidden = false;
   document.body.classList.add('drawer-open');
@@ -201,6 +205,100 @@ function saveTrace(trace) {
 
 const wait = (milliseconds) => new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 
+async function getLiveAgent() {
+  if (state.agent) return state.agent;
+  const response = await fetch(`/api/shared_agent?token=${encodeURIComponent(sharedAgentToken)}`, { cache: 'no-store' });
+  if (!response.ok) throw new Error(`共享知识库加载失败（HTTP ${response.status}）`);
+  const agent = await response.json();
+  if (!agent?.id || !Array.isArray(agent.sources) || agent.sources.length === 0) {
+    throw new Error('共享知识库配置不完整');
+  }
+  state.agent = agent;
+  return agent;
+}
+
+function parseStreamFrame(frame, output) {
+  const payloadText = frame
+    .split(/\r?\n/)
+    .filter((line) => line.startsWith('data:'))
+    .map((line) => line.slice(5).trimStart())
+    .join('\n');
+  if (!payloadText) return;
+  let event;
+  try { event = JSON.parse(payloadText); } catch { return; }
+  if (event.type === 'answer' && typeof event.answer === 'string') {
+    if (!event.answer.includes("'type': 'thought'")) output.answer += event.answer;
+  } else if (event.type === 'source' && Array.isArray(event.source)) {
+    output.sources = event.source;
+  } else if (event.type === 'error') {
+    throw new Error(event.error || '回答生成失败');
+  }
+}
+
+function toLiveResult(answer, rawSources) {
+  const sourceRecords = rawSources.map((source, index) => ({
+    id: `live-source-${index + 1}`,
+    section: `来源 ${index + 1}`,
+    file: source.title || source.filename || source.source || '知识库文档',
+    version: '当前云端知识库',
+    chunk: source.chunk_id || source.id || '',
+    snippet: source.text || '',
+    location: source.page || source.section || '',
+    score: source.score == null ? '' : String(source.score),
+  }));
+  const cleanedAnswer = answer.replace(/\n*来源：[^\n]+\s*$/u, '').trim();
+  return {
+    intent: 'live_rag',
+    originalQuestion: state.lastQuestion,
+    headline: sourceRecords.length ? '基于知识库的回答' : '知识库边界说明',
+    sections: [{
+      title: '答复',
+      text: cleanedAnswer || '当前未能生成有效回答，请稍后重试。',
+      sourceIds: sourceRecords.map((source) => source.id),
+    }],
+    sources: sourceRecords,
+    coverage: { total: 1, handled: 1, fullyAnswered: sourceRecords.length ? 1 : 0, status: sourceRecords.length ? 'covered' : 'not_covered' },
+    refusalReason: sourceRecords.length ? null : 'knowledge_boundary',
+  };
+}
+
+async function fetchLiveResult(question) {
+  const agent = await getLiveAgent();
+  const activeDocs = agent.sources.length === 1 ? agent.sources[0] : agent.sources;
+  const response = await fetch('/stream', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+    body: JSON.stringify({
+      question,
+      conversation_id: null,
+      prompt_id: agent.prompt_id || null,
+      chunks: String(agent.chunks || '2'),
+      isNoneDoc: false,
+      agent_id: agent.id,
+      active_docs: activeDocs,
+      retriever: agent.retriever || 'hybrid',
+      save_conversation: false,
+      visibility: 'hidden',
+    }),
+  });
+  if (!response.ok || !response.body) throw new Error(`问答服务暂不可用（HTTP ${response.status}）`);
+
+  const output = { answer: '', sources: [] };
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  while (true) {
+    const { value, done } = await reader.read();
+    buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+    const frames = buffer.split(/\r?\n\r?\n/);
+    buffer = frames.pop() || '';
+    frames.forEach((frame) => parseStreamFrame(frame, output));
+    if (done) break;
+  }
+  if (buffer.trim()) parseStreamFrame(buffer, output);
+  return toLiveResult(output.answer, output.sources);
+}
+
 async function runQuestion(question, options = { appendUser: true }) {
   if (!question || state.busy) return;
   state.busy = true;
@@ -211,17 +309,35 @@ async function runQuestion(question, options = { appendUser: true }) {
   welcomePanel.hidden = true;
   if (options.appendUser) appendUserMessage(question);
   const loading = appendLoading();
-  await wait(180);
-  loading.querySelector('p').textContent = '正在检查问题覆盖…';
-  await wait(180);
-  loading.remove();
-  const result = resolveQuestion(question);
-  appendResult(result);
-  const requestId = `preview-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
-  saveTrace(buildTrace(result, Math.round(performance.now() - startedAt), requestId));
+  let result;
+  try {
+    await wait(180);
+    loading.querySelector('p').textContent = liveMode ? '正在检索知识库并核对来源…' : '正在检查问题覆盖…';
+    result = liveMode ? await fetchLiveResult(question) : resolveQuestion(question);
+    loading.remove();
+    appendResult(result);
+    if (!liveMode) {
+      const requestId = `preview-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+      saveTrace(buildTrace(result, Math.round(performance.now() - startedAt), requestId));
+    }
+  } catch (error) {
+    loading.remove();
+    result = {
+      intent: 'service_error',
+      originalQuestion: question,
+      headline: '暂时无法完成回答',
+      sections: [{ title: '建议', text: error.message || '服务暂时不可用，请稍后重试。', sourceIds: [] }],
+      sources: [],
+      coverage: { total: 1, handled: 0, fullyAnswered: 0, status: 'not_covered' },
+      refusalReason: 'service_error',
+    };
+    appendResult(result);
+  }
   state.busy = false;
   sendButton.disabled = false;
-  composerStatus.textContent = '本地知识快照回答，仅供演示；个人订单请前往订单详情查询';
+  composerStatus.textContent = liveMode
+    ? '回答来自当前云端知识库；个人订单请前往订单详情查询'
+    : '本地知识快照回答，仅供演示；个人订单请前往订单详情查询';
   conversation.scrollTop = conversation.scrollHeight;
 }
 
@@ -262,3 +378,17 @@ document.querySelector('#close-source').addEventListener('click', closeSource);
 document.querySelector('#drawer-backdrop').addEventListener('click', closeSource);
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeSource(); });
 autoGrow();
+
+if (liveMode) {
+  serviceStatus.textContent = '知识库连接中';
+  serviceDetail.textContent = '正在加载售后政策';
+  getLiveAgent()
+    .then(() => {
+      serviceStatus.textContent = '知识库已连接';
+      serviceDetail.textContent = '云端售后政策知识库';
+    })
+    .catch(() => {
+      serviceStatus.textContent = '服务暂不可用';
+      serviceDetail.textContent = '请稍后刷新页面';
+    });
+}
