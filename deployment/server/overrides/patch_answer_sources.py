@@ -4,6 +4,7 @@ from pathlib import Path
 
 
 TARGET = Path("/app/application/api/answer/routes/answer.py")
+STREAM_TARGET = Path("/app/application/api/answer/routes/base.py")
 IMPORT_OLD = "import logging\nimport traceback\n"
 IMPORT_NEW = '''import ast
 import logging
@@ -112,6 +113,32 @@ NEW = '''            stream_result["answer"] = _strip_serialized_thought_events(
                 return make_response({"error": stream_result["error"]}, 400)
 '''
 
+STREAM_SOURCE_OLD = '''                elif "sources" in line:
+                    _mark_streaming_once()
+                    truncated_sources = []
+                    source_log_docs = line["sources"]
+                    for source in line["sources"]:
+                        truncated_source = source.copy()
+                        if "text" in truncated_source:
+                            truncated_source["text"] = (
+                                truncated_source["text"][:100].strip() + "..."
+                            )
+                        truncated_sources.append(truncated_source)
+                    if truncated_sources:
+                        yield _emit(
+                            {"type": "source", "source": truncated_sources}
+                        )
+'''
+
+STREAM_SOURCE_NEW = '''                elif "sources" in line:
+                    _mark_streaming_once()
+                    source_log_docs = line["sources"]
+                    if source_log_docs:
+                        yield _emit(
+                            {"type": "source", "source": source_log_docs}
+                        )
+'''
+
 
 def patch_source(source: str) -> str:
     patched = source
@@ -126,6 +153,17 @@ def patch_source(source: str) -> str:
     return patched
 
 
+def patch_stream_source(source: str) -> str:
+    """Keep complete retrieved chunk text in the live SSE source event."""
+    if STREAM_SOURCE_NEW in source:
+        return source
+    if source.count(STREAM_SOURCE_OLD) != 1:
+        raise RuntimeError("Expected streaming source marker was not found")
+    return source.replace(STREAM_SOURCE_OLD, STREAM_SOURCE_NEW)
+
+
 if __name__ == "__main__":
     source = TARGET.read_text(encoding="utf-8")
     TARGET.write_text(patch_source(source), encoding="utf-8")
+    stream_source = STREAM_TARGET.read_text(encoding="utf-8")
+    STREAM_TARGET.write_text(patch_stream_source(stream_source), encoding="utf-8")

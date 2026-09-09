@@ -133,6 +133,47 @@ class KeywordRankerTests(unittest.TestCase):
 
 
 class SharedAgentPatchTests(unittest.TestCase):
+    def test_stream_source_patch_keeps_facts_after_100_characters(self):
+        long_text = "质量问题退货运费" + ("说明" * 48) + "普通快递最高报销 12 元。"
+        self.assertGreater(len(long_text), 100)
+        source = ANSWER_PATCH.STREAM_SOURCE_OLD
+
+        emitted_source = {"filename": "policy.md", "text": long_text}
+        line = {"sources": [emitted_source]}
+
+        def execute_stream_block(block):
+            events = []
+
+            def _emit(event):
+                events.append(event)
+                return event
+
+            executable = block.replace('                elif "sources" in line:', "    if True:")
+            executable = "def run(line, _mark_streaming_once, _emit):\n" + "\n".join(
+                row[12:] if row.startswith(" " * 12) else row
+                for row in executable.splitlines()
+            )
+            namespace = {}
+            exec(executable, namespace)
+            list(namespace["run"](line, lambda: None, _emit))
+            return events[0]["source"][0]["text"]
+
+        truncated_text = execute_stream_block(source)
+        self.assertNotIn("12 元", truncated_text)
+        self.assertTrue(truncated_text.endswith("..."))
+
+        patched = ANSWER_PATCH.patch_stream_source(source)
+        self.assertNotIn("[:100]", patched)
+        self.assertIn('{"type": "source", "source": source_log_docs}', patched)
+        complete_text = execute_stream_block(patched)
+        self.assertEqual(long_text, complete_text)
+        self.assertIn("12 元", complete_text)
+        self.assertEqual(patched, ANSWER_PATCH.patch_stream_source(patched))
+
+    def test_stream_source_patch_fails_closed_when_marker_is_missing(self):
+        with self.assertRaisesRegex(RuntimeError, "streaming source marker"):
+            ANSWER_PATCH.patch_stream_source("def unrelated():\n    return None\n")
+
     def test_multi_source_ids_are_added_to_shared_agent_payload(self):
         source = (
             "def serialize(agent):\n"
