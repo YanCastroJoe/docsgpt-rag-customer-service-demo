@@ -163,13 +163,71 @@ class SharedAgentPatchTests(unittest.TestCase):
         self.assertIn("当前知识库中未找到相关信息", patched)
         self.assertIn("_is_full_knowledge_abstention", patched)
         self.assertIn("_filter_answer_sources", patched)
-        self.assertIn('heading in source_notes', patched)
+        self.assertIn('re.escape(value)', patched)
         self.assertIn("_strip_serialized_thought_events", patched)
         refusal = "当前知识库中未找到相关信息，建议联系人工客服确认。"
         partial = "平台承担退货运费。\n" + refusal + "\n来源：示例.md · 运费"
         self.assertTrue(helpers["_is_full_knowledge_abstention"](refusal))
         self.assertFalse(helpers["_is_full_knowledge_abstention"](partial))
         self.assertEqual(ANSWER_PATCH.patch_source(patched), patched)
+
+    def test_refusal_variants_clear_sources_but_partial_answer_keeps_match(self):
+        helpers = {}
+        exec(compile(ANSWER_PATCH.IMPORT_NEW, "answer_helpers.py", "exec"), helpers)
+        variants = [
+            "当前知识库中未找到相关信息，建议联系人工客服确认。",
+            "当前知识库中未找到相关信息,建议联系人工客服确认.",
+            " 当前知识库中未找到相关信息； 建议联系人工客服确认！ ",
+            "当前知识库中未找到相关信息。建议联系人工客服确认。",
+            "当前知识库中未找到相关信息 建议联系人工客服确认",
+            "当前知识库中未找到相关信息！建议联系人工客服确认！",
+        ]
+        self.assertTrue(all(helpers["_is_full_knowledge_abstention"](item) for item in variants))
+        self.assertTrue(helpers["_is_full_knowledge_abstention"](
+            variants[0] + "\n来源：policy.md · 质量问题退货运费"
+        ))
+        partial = "平台承担运费。\n当前知识库中未找到相关信息，建议联系人工客服确认。\n来源：policy.md · 运费"
+        self.assertFalse(helpers["_is_full_knowledge_abstention"](partial))
+        inline_source = (
+            "普通快递最高12元。来源：policy.md · 质量问题退货运费\n"
+            "当前知识库中未找到相关信息，建议联系人工客服确认。"
+        )
+        self.assertFalse(helpers["_is_full_knowledge_abstention"](inline_source))
+
+    def test_source_filter_fails_closed_and_keeps_only_explicit_chunk(self):
+        helpers = {}
+        exec(compile(ANSWER_PATCH.IMPORT_NEW, "answer_helpers.py", "exec"), helpers)
+        chunks = [
+            {"filename": "policy.md", "text": "运费规则\n平台承担运费"},
+            {"filename": "policy.md", "text": "发票规则\n纸质发票寄回"},
+        ]
+        filter_sources = helpers["_filter_answer_sources"]
+        self.assertEqual([], filter_sources("平台承担运费。", chunks))
+        self.assertEqual([], filter_sources("来源：unknown.md · 未知", chunks))
+        self.assertEqual([chunks[0]], filter_sources("来源：policy.md · 运费规则", chunks))
+
+        ambiguous = [
+            {"filename": "policy.md", "text": "相同章节\nA"},
+            {"filename": "policy.md", "text": "相同章节\nB"},
+        ]
+        self.assertEqual([], filter_sources("来源：policy.md · 相同章节", ambiguous))
+        self.assertEqual([], filter_sources("来源：policy.md", ambiguous))
+        self.assertEqual(
+            [],
+            filter_sources("来源：a.md\n来源：相同章节", [
+                {"filename": "a.md", "text": "相同章节\nA"},
+                {"filename": "b.md", "text": "相同章节\nB"},
+            ]),
+        )
+
+        distinct_files = [
+            {"filename": "a.md", "text": "相同章节\nA"},
+            {"filename": "b.md", "text": "相同章节\nB"},
+        ]
+        self.assertEqual(
+            [distinct_files[0]],
+            filter_sources("来源：a.md · 相同章节", distinct_files),
+        )
 
 
 class HybridRetrieverTests(unittest.TestCase):

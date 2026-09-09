@@ -143,6 +143,32 @@ def source_names(raw_sources: Any) -> list[str]:
     return list(dict.fromkeys(names))
 
 
+def source_chunks(raw_sources: Any) -> list[dict[str, str]]:
+    """Capture a small review-safe subset of each returned chunk."""
+    if not isinstance(raw_sources, list):
+        return []
+    chunks: list[dict[str, str]] = []
+    for source in raw_sources:
+        if not isinstance(source, dict):
+            continue
+        metadata = source.get("metadata") if isinstance(source.get("metadata"), dict) else {}
+        document = source.get("document") if isinstance(source.get("document"), dict) else {}
+        text = source.get("text") or source.get("page_content") or document.get("text") or document.get("page_content")
+        filename = source.get("filename") or source.get("title") or source.get("source") or source.get("name") or metadata.get("filename") or metadata.get("title") or metadata.get("source") or metadata.get("name")
+        chunk_id = source.get("chunk_id") or source.get("id") or metadata.get("chunk_id") or metadata.get("id")
+        heading = source.get("heading") or source.get("section") or metadata.get("heading") or metadata.get("section")
+        if not heading and text:
+            heading = next((line.strip() for line in str(text).splitlines() if line.strip()), "")
+        item = {
+            key: str(value)
+            for key, value in (("filename", filename), ("heading", heading), ("id", chunk_id), ("text", text))
+            if value not in (None, "")
+        }
+        if item and item not in chunks:
+            chunks.append(item)
+    return chunks
+
+
 def ask_docsgpt(
     *, base_url: str, api_key: str, question: str, chunks: int, timeout: float
 ) -> dict[str, Any]:
@@ -176,9 +202,11 @@ def ask_docsgpt(
         str(result.get("answer") or "")
     )
     answer, thought_events_stripped = strip_serialized_thought_events(answer)
+    raw_sources = result.get("sources")
     return {
         "answer": answer,
-        "sources": source_names(result.get("sources")),
+        "sources": source_names(raw_sources),
+        "source_chunks": source_chunks(raw_sources),
         "conversation_id": result.get("conversation_id"),
         "latency_ms": elapsed_ms,
         "response_encoding_repaired": encoding_repaired,
@@ -239,6 +267,7 @@ def main() -> int:
                 "case_id": case_id,
                 "answer": result["answer"],
                 "sources": result["sources"],
+                "source_chunks": result["source_chunks"],
                 "conversation_id": result["conversation_id"],
                 "latency_ms": result["latency_ms"],
                 "response_encoding_repaired": result["response_encoding_repaired"],

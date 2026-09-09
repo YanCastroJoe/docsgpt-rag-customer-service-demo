@@ -1,6 +1,17 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { normalizeQuestion, resolveQuestion } from './shared/rag_logic.mjs';
+import { filterAnswerSources, normalizeQuestion, resolveQuestion } from './shared/rag_logic.mjs';
+
+test('live source filter uses exact chunk identifiers and nested sections', () => {
+  const right = { title: 'policy.md', text: '质量问题退货运费\n平台承担' };
+  const wrong = { title: 'policy.md', text: '非质量问题退货运费\n用户承担' };
+  const nested = { title: 'policy.md', text: '正文', metadata: { section: '退款到账时效' } };
+  assert.deepEqual(filterAnswerSources('来源：policy.md · 质量问题退货运费', [right, wrong]), [right]);
+  assert.deepEqual(filterAnswerSources('来源：policy.md · 退款到账时效', [nested]), [nested]);
+  assert.deepEqual(filterAnswerSources('来源：chunk-1', [{ id: 'chunk-10', text: '正文' }, { id: '   ', text: '' }]), []);
+  assert.deepEqual(filterAnswerSources('来源：chunk-10', [{ id: 'chunk-10', text: '正文' }]).length, 1);
+  assert.deepEqual(filterAnswerSources('当前知识库中未找到相关信息。建议联系人工客服确认。\n来源：policy.md · 质量问题退货运费', [right]), []);
+});
 
 test('RAG-01 capability questions bypass knowledge-not-found recovery', () => {
   const result = resolveQuestion('我可以问任何问题吗？');
@@ -56,4 +67,71 @@ test('RAG-07 explicit order lookup never invents status or source', () => {
   assert.equal(result.intent, 'personal_data_unavailable');
   assert.equal(result.sources.length, 0);
   assert.match(result.sections[0].text, /订单详情|人工客服/);
+});
+
+test('RAG-02 historical semantic counterexamples keep negation and multi-intent boundaries', () => {
+  const cases = [
+    ['东西没有毛病，只是不喜欢，寄回去的钱谁出？', 'non_quality_shipping', /用户承担/, /平台承担|报销 12 元/],
+    ['不是质量问题，是我买错了，快递费谁出？', 'non_quality_shipping', /用户承担/, /平台承担|报销 12 元/],
+    ['商品没有质量问题，签收超过15天，寄回运费谁承担？', 'non_quality_shipping', /用户承担/, /平台承担|报销 12 元/],
+    ['我没有要换货，只想问退款多久到银行卡？', 'refund_policy', /银行卡.*3—7 个工作日/, null],
+  ];
+  cases.forEach(([question, intent, expected, forbidden]) => {
+    const result = resolveQuestion(question);
+    const answer = result.sections.map((item) => item.text).join(' ');
+    assert.equal(result.intent, intent, question);
+    assert.match(answer, expected, question);
+    if (forbidden) assert.doesNotMatch(answer, forbidden, question);
+  });
+});
+
+test('RAG-02 historical compound questions answer each supported part explicitly', () => {
+  const shippingAndRefund = resolveQuestion('质量问题退货运费谁出？另外银行卡退款一般多久到账？');
+  assert.equal(shippingAndRefund.coverage.total, 2);
+  assert.equal(shippingAndRefund.coverage.fullyAnswered, 2);
+  assert.match(shippingAndRefund.sections.map((item) => item.text).join(' '), /12 元/);
+  assert.match(shippingAndRefund.sections.map((item) => item.text).join(' '), /银行卡.*3—7 个工作日/);
+
+  const evidenceAndShipping = resolveQuestion('质量问题退货需要哪些凭证，运费最高报销多少？');
+  assert.equal(evidenceAndShipping.coverage.total, 2);
+  assert.equal(evidenceAndShipping.coverage.fullyAnswered, 2);
+  assert.match(evidenceAndShipping.sections.map((item) => item.text).join(' '), /照片|视频|检测说明/);
+  assert.match(evidenceAndShipping.sections.map((item) => item.text).join(' '), /12 元/);
+});
+
+test('RAG-02 personal refund status wording refuses lookup without attaching policy evidence', () => {
+  const result = resolveQuestion('退款是否已经到账？请查询我的账号。');
+  assert.equal(result.intent, 'personal_data_unavailable');
+  assert.equal(result.sources.length, 0);
+  assert.match(result.sections[0].text, /无法访问|订单详情|人工客服/);
+});
+
+test('source filtering fails closed when the cited heading is ambiguous across files', () => {
+  const answer = '按规则处理。\n来源：质量问题退货运费';
+  const candidates = [
+    { title: 'policy-a.md', text: '质量问题退货运费\n平台承担' },
+    { title: 'policy-b.md', text: '质量问题退货运费\n商家承担' },
+  ];
+  assert.deepEqual(filterAnswerSources(answer, candidates), []);
+  assert.deepEqual(filterAnswerSources('按规则处理。\n来源：policy-a.md · 质量问题退货运费', candidates), [candidates[0]]);
+  assert.deepEqual(filterAnswerSources('按规则处理。\n来源：policy.md · 质量问题退货运费', [
+    { title: 'policy.md', text: '质量问题退货运费\n候选 A' },
+    { title: 'policy.md', text: '质量问题退货运费\n候选 B' },
+  ]), []);
+});
+
+test('source filtering never combines a file on one citation line with a heading on another', () => {
+  const candidates = [
+    { title: 'policy-a.md', text: '重复章节\n候选 A' },
+    { title: 'policy-b.md', text: '重复章节\n候选 B' },
+  ];
+  assert.deepEqual(filterAnswerSources('回答。\n来源：policy-a.md\n来源：重复章节', candidates), []);
+});
+
+test('a unique chunk id takes precedence over an ambiguous heading on the same citation line', () => {
+  const candidates = [
+    { id: 'chunk-a', title: 'policy.md', text: '重复章节\n候选 A' },
+    { id: 'chunk-b', title: 'policy.md', text: '重复章节\n候选 B' },
+  ];
+  assert.deepEqual(filterAnswerSources('回答。\n来源：chunk-a · 重复章节', candidates), [candidates[0]]);
 });

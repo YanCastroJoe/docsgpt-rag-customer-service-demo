@@ -18,6 +18,7 @@ deployment/server/overrides/Dockerfile.validation
 __pycache__/
 .venv/
 node_modules/
+/tmp/
 
 # User review briefs and raw live sessions stay local. Publish only sanitized evidence.
 /RAG_UI优化与测试任务简报.md

@@ -41,8 +41,8 @@ if [[ "${demo_html}" != *'售后智能助手'* ]] || \
   [[ "${demo_html}" == *'__SHARED_AGENT_TOKEN__'* ]] || \
   [[ "${demo_script}" != *"fetch('/stream'"* ]] || \
   [[ "${demo_script}" != *'/api/shared_agent?token='* ]] || \
-  [[ "${demo_script}" != *'effectiveSources = refusal ? [] : rawSources'* ]] || \
-  [[ "${demo_logic}" != *'isKnowledgeBoundaryRefusal'* ]]; then
+  [[ "${demo_script}" != *'effectiveSources = filterAnswerSources(answer, rawSources)'* ]] || \
+  [[ "${demo_logic}" != *'filterAnswerSources'* ]]; then
   printf '[FAIL] DocsGPT business UI is missing or not connected to the shared Agent\n' >&2
   exit 1
 fi

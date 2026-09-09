@@ -4,6 +4,7 @@ import test from 'node:test';
 
 const html = readFileSync(new URL('./shared/index.html', import.meta.url), 'utf8');
 const script = readFileSync(new URL('./shared/app.js', import.meta.url), 'utf8');
+const liveStream = readFileSync(new URL('./shared/live_stream.mjs', import.meta.url), 'utf8');
 const logic = readFileSync(new URL('./shared/rag_logic.mjs', import.meta.url), 'utf8');
 const styles = readFileSync(new URL('./shared/styles.css', import.meta.url), 'utf8');
 const opsHtml = readFileSync(new URL('../ops/index.html', import.meta.url), 'utf8');
@@ -36,9 +37,11 @@ test('cloud demo mode loads the shared Agent and streams real answers', () => {
   assert.match(script, /\/api\/shared_agent\?token=/);
   assert.match(script, /fetch\('\/stream'/);
   assert.match(script, /save_conversation: false/);
-  assert.match(script, /event\.type === 'source'/);
-  assert.match(script, /'type': 'thought'/);
-  assert.match(script, /const effectiveSources = refusal \? \[\] : rawSources/);
+  assert.match(liveStream, /event\.type === 'source'/);
+  assert.match(liveStream, /'type': 'thought'/);
+  assert.match(liveStream, /event\.type === 'end'/);
+  assert.match(script, /collectLiveStream\(response\)/);
+  assert.match(script, /const effectiveSources = filterAnswerSources\(answer, rawSources\)/);
   assert.match(script, /refusalReason: refusal \? 'knowledge_boundary' : null/);
   assert.match(nginx, /default_type application\/javascript/);
   assert.match(nginx, /absolute_redirect off/);

@@ -3,8 +3,39 @@ export const KNOWLEDGE_ABSTENTION_START = '当前知识库中未找到相关信�
 export const KNOWLEDGE_ABSTENTION_END = '建议联系人工客服确认';
 
 export function isKnowledgeBoundaryRefusal(answer) {
-  const text = String(answer || '').trim();
-  return text.includes(KNOWLEDGE_ABSTENTION_START) && text.includes(KNOWLEDGE_ABSTENTION_END);
+  const text = String(answer || '').split(/\r?\n/u).filter((line) => !/^\s*来源\s*[:：]/u.test(line)).join('\n').trim();
+  return /^(?:抱歉\s*[,，。]?\s*)?当前知识库中未找到相关信息\s*[,，。；;!！]?\s*建议联系人工客服确认\s*[。.!！]?$/u.test(text);
+}
+
+export function filterAnswerSources(answer, rawSources) {
+  if (!Array.isArray(rawSources) || isKnowledgeBoundaryRefusal(answer)) return [];
+  const citationLines = String(answer || '').split(/\r?\n/u).filter((line) => /来源\s*[:：]/u.test(line));
+  if (citationLines.length === 0) return [];
+  const containsIdentifier = (line, value) => {
+    const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(?:^|[\\s·《（(:：])${escaped}(?:$|[\\s·》）)])`, 'u').test(line);
+  };
+  const descriptors = rawSources.map((source) => {
+    if (!source || typeof source !== 'object') return false;
+    const text = String(source.text || source.page_content || '');
+    const heading = text.split(/\r?\n/u).find((line) => line.trim())?.trim();
+    const metadata = source.metadata && typeof source.metadata === 'object' ? source.metadata : {};
+    const identities = [heading, source.heading, source.section, source.chunk_id, source.id, metadata.heading, metadata.section, metadata.chunk_id, metadata.id]
+      .map((value) => String(value ?? '').trim()).filter((value) => value);
+    const files = [source.title, source.file, source.filename, source.source, metadata.title, metadata.file, metadata.filename, metadata.source]
+      .map((value) => String(value ?? '').trim()).filter((value) => value);
+    return { source, identities, files };
+  }).filter(Boolean);
+  return descriptors.filter((item) => citationLines.some((line) => {
+    const matchedIdentities = item.identities.filter((identity) => containsIdentifier(line, identity));
+    if (matchedIdentities.some((identity) => descriptors.filter((other) => other.identities.includes(identity)).length === 1)) {
+      return true;
+    }
+    const matchedFiles = item.files.filter((file) => containsIdentifier(line, file));
+    return matchedIdentities.some((identity) => matchedFiles.some((file) => (
+      descriptors.filter((other) => other.identities.includes(identity) && other.files.includes(file)).length === 1
+    )));
+  })).map((item) => item.source);
 }
 
 const FILE = 'customer_service_rag_optimized.md';
@@ -55,6 +86,7 @@ export const sources = {
 };
 
 const synonymRules = [
+  [/东西没有毛病|商品没有毛病|没有毛病|不是质量问题|非质量问题/g, '非质量问题'],
   [/寄回去的钱|寄回的钱|寄件费用|寄回费用|寄回商品的快递费|寄回快递费|快递费|邮寄费|邮费/g, '退货运费'],
   [/东西坏了|商品坏了|商品有问题|收到的商品有质量问题|有毛病|出毛病|用不了|有故障/g, '商品质量问题'],
   [/最多给报多少|最多能报多少|最多报多少|报销上限/g, '最高报销多少'],
@@ -72,13 +104,20 @@ export function classifyIntent(question, normalized = normalizeQuestion(question
   if (/(可以问(任何|什么)|能问什么|你能做什么|能力范围|支持哪些问题)/.test(original)) return 'capability_scope';
   if (/(推荐|选购|哪款).*(手机|电脑|商品)|帮我.*(买|挑)/.test(original)) return 'out_of_scope';
   if (/(海外|国际|线下维修门店|永久免费维修|24\s*小时.*人工客服)/.test(original)) return 'knowledge_not_found';
-  if (/(订单\s*\d+|订单号|查询订单|查.*订单|这单.*(退没退|进度)|退款.*(到哪一步|进度)|订单状态|实时物流|退款到账了吗)/.test(original)) return 'personal_data_unavailable';
+  if (/(订单\s*\d+|订单号|查询订单|查.*订单|这单.*(退没退|进度)|退款.*(到哪一步|进度)|订单状态|实时物流|退款到账了吗|退款.*(?:是否|是不是|有没有|已经).*到账.*(?:查询|查).*?(?:账号|账户|订单))/.test(original)) return 'personal_data_unavailable';
   if (/(我的退款|我这笔退款).*(什么时候|多久|到账|时效)/.test(original)) return 'refund_policy_with_personal_disclaimer';
-  if (/换货|缺货/.test(normalized) && /退款/.test(normalized) && /(时效|多久|到账)/.test(normalized)) return 'compound_policy';
+  const deniesExchange = /(?:没(?:有)?(?:要|想)|不(?:要|想)|不是).{0,4}换货/.test(original);
+  const hasRefundTiming = /退款/.test(normalized) && /(时效|多久|到账)/.test(normalized);
+  const hasShipping = /退货运费|运费/.test(normalized);
+  const hasEvidence = /凭证|证明|材料/.test(normalized);
+  const isNonQuality = /(没有质量问题|非质量问题|不想要|不喜欢|买错|个人原因)/.test(normalized);
+  if (hasShipping && isNonQuality) return 'non_quality_shipping';
+  if (hasShipping && /质量问题/.test(normalized) && hasRefundTiming) return 'compound_shipping_refund';
+  if (hasShipping && /质量问题/.test(normalized) && hasEvidence) return 'compound_evidence_shipping';
+  if (!deniesExchange && /换货|缺货/.test(normalized) && hasRefundTiming) return 'compound_policy';
   if (/(超过|超出).{0,4}(15|十五).{0,2}(天|日)/.test(original) && /运费|邮费|寄回/.test(original)) return 'compound_after_sales';
-  if (/退货运费|运费/.test(normalized) && /(没有质量问题|非质量问题|不想要|个人原因)/.test(normalized)) return 'non_quality_shipping';
-  if (/退货运费|运费/.test(normalized) && /质量问题/.test(normalized)) return 'shipping_policy';
-  if (/退款/.test(normalized) && /(时效|多久|到账)/.test(normalized)) return 'refund_policy';
+  if (hasShipping && /质量问题/.test(normalized)) return 'shipping_policy';
+  if (hasRefundTiming) return 'refund_policy';
   if (/缺货|换货/.test(normalized)) return 'exchange_policy';
   if (/凭证|证明|材料/.test(normalized)) return 'evidence_policy';
   return 'knowledge_not_found';
@@ -161,6 +200,28 @@ export function resolveQuestion(question) {
       sub('换货缺货怎么办', 'answered', '已命中换货缺货规则'),
       sub('退款多久到账', 'answered', '已命中退款到账时效'),
     ],
+    coverage: { handled: 2, total: 2, fullyAnswered: 2, status: 'complete' },
+  };
+  if (intent === 'compound_shipping_refund') return {
+    ...base,
+    headline: '我把运费和退款时效分别说明',
+    sections: [
+      section('1. 质量问题退货运费', '非人为质量问题在规定时间内提交申请且凭证审核通过后，往返运费由平台承担；自行寄回的普通快递最高报销 12 元。', ['shipping-policy']),
+      section('2. 银行卡退款到账', '普通商品质检通常需要 1—3 个工作日；质检完成后，银行卡退款通常 3—7 个工作日到账。', ['refund-timing']),
+    ],
+    sources: [sources.shipping, sources.refund],
+    subQuestions: [sub('质量问题退货运费由谁承担', 'answered', '已命中运费规则'), sub('银行卡退款多久到账', 'answered', '已命中退款到账时效')],
+    coverage: { handled: 2, total: 2, fullyAnswered: 2, status: 'complete' },
+  };
+  if (intent === 'compound_evidence_shipping') return {
+    ...base,
+    headline: '我把申请凭证和运费规则分别说明',
+    sections: [
+      section('1. 申请凭证', '请上传能够清楚展示问题的照片、视频或检测说明，客服会根据凭证判断后续处理方案。', ['quality-evidence']),
+      section('2. 退货运费', '非人为质量问题在规定时间内提交申请且凭证审核通过后，往返运费由平台承担；自行寄回的普通快递最高报销 12 元。', ['shipping-policy']),
+    ],
+    sources: [sources.evidence, sources.shipping],
+    subQuestions: [sub('质量问题需要哪些凭证', 'answered', '已命中申请材料规则'), sub('运费最高报销多少', 'answered', '已命中运费规则')],
     coverage: { handled: 2, total: 2, fullyAnswered: 2, status: 'complete' },
   };
   if (intent === 'non_quality_shipping') return {

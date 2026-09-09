@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 import unittest
+from unittest import mock
 from pathlib import Path
 
 
@@ -95,6 +97,54 @@ class EvaluateCaseTests(unittest.TestCase):
         self.assertFalse(result["overall_pass"])
         self.assertEqual(["unsupported_boundary_claim"], result["failure_types"])
 
+    def test_boundary_refusal_with_sources_fails_source_and_overall(self):
+        case = {"id": "T-005", "category": "边界", "question": "未知？", "expected_behavior": "abstain", "abstain_patterns": ["未找到"], "source_hints": []}
+        result = evaluate_rag.evaluate_case(case, {"answer": "知识库未找到相关信息。", "sources": ["invoice.md"]})
+        self.assertTrue(result["answer_pass"])
+        self.assertFalse(result["source_pass"])
+        self.assertFalse(result["overall_pass"])
+        self.assertIn("abstention_has_sources", result["failure_types"])
+
+    def test_six_refusal_variants_with_wrong_sources_all_fail(self):
+        case = {"id": "T-005b", "category": "边界", "question": "未知？", "expected_behavior": "abstain", "abstain_patterns": ["未找到|人工客服"], "source_hints": []}
+        variants = [
+            "当前知识库中未找到相关信息，建议联系人工客服确认。",
+            "当前知识库中未找到相关信息,建议联系人工客服确认.",
+            "当前知识库中未找到相关信息；建议联系人工客服确认！",
+            "当前知识库中未找到相关信息。建议联系人工客服确认。",
+            "当前知识库中未找到相关信息 建议联系人工客服确认",
+            "抱歉，当前知识库中未找到相关信息，建议联系人工客服确认。",
+        ]
+        for answer in variants:
+            with self.subTest(answer=answer):
+                result = evaluate_rag.evaluate_case(case, {"answer": answer, "sources": ["unrelated-invoice.md"]})
+                self.assertFalse(result["source_pass"])
+                self.assertFalse(result["overall_pass"])
+                self.assertIn("abstention_has_sources", result["failure_types"])
+
+    def test_matching_filename_cannot_hide_irrelevant_captured_chunk(self):
+        case = {"id": "T-006", "category": "物流", "question": "多久？", "expected_behavior": "answer", "required_patterns": ["48.*小时"], "source_hints": ["shipping_policy"]}
+        result = evaluate_rag.evaluate_case(case, {"answer": "48小时内发货。", "sources": ["shipping_policy.md"], "source_chunks": [{"filename": "shipping_policy.md", "text": "纸质发票需要寄回"}]})
+        self.assertFalse(result["source_pass"])
+        self.assertIn("source_chunk_mismatch", result["failure_types"])
+
+    def test_one_relevant_and_one_irrelevant_chunk_fails(self):
+        case = {"id": "T-006b", "category": "物流", "question": "多久？", "expected_behavior": "answer", "required_patterns": ["48.*小时"], "source_hints": ["shipping_policy"]}
+        chunks = [{"text": "48小时内发货"}, {"text": "纸质发票需要寄回"}]
+        result = evaluate_rag.evaluate_case(case, {"answer": "48小时内发货。", "sources": ["shipping_policy.md"], "source_chunks": chunks})
+        self.assertFalse(result["source_pass"])
+
+    def test_metadata_only_chunk_cannot_pass_body_validation(self):
+        case = {"id": "T-006c", "category": "物流", "question": "多久？", "expected_behavior": "answer", "required_patterns": ["48.*小时"], "source_hints": ["shipping_policy"]}
+        chunk = {"filename": "shipping_policy.md", "heading": "48小时内发货", "metadata": {"text": "48小时内发货"}}
+        result = evaluate_rag.evaluate_case(case, {"answer": "48小时内发货。", "sources": ["shipping_policy.md"], "source_chunks": [chunk]})
+        self.assertFalse(result["source_pass"])
+
+    def test_legacy_filename_snapshot_is_explicitly_unverified(self):
+        case = {"id": "T-007", "category": "物流", "question": "多久？", "expected_behavior": "answer", "required_patterns": ["48.*小时"], "source_hints": ["shipping_policy"]}
+        result = evaluate_rag.evaluate_case(case, {"answer": "48小时内发货。", "sources": ["shipping_policy.md"]})
+        self.assertEqual("filename_only_unverified", result["source_validation"])
+
 
 class SourceNormalizationTests(unittest.TestCase):
     def test_source_names_supports_flat_and_nested_shapes(self):
@@ -108,6 +158,19 @@ class SourceNormalizationTests(unittest.TestCase):
             ["a.md", "b.md", "c.md"],
             run_docsgpt_evaluation.source_names(sources),
         )
+
+    def test_source_chunks_whitelists_review_fields(self):
+        chunks = run_docsgpt_evaluation.source_chunks([{"filename": "a.md", "chunk_id": 7, "text": "发货规则\n48小时内发货", "score": 0.9, "secret": "omit"}])
+        self.assertEqual({"filename": "a.md", "heading": "发货规则", "id": "7", "text": "发货规则\n48小时内发货"}, chunks[0])
+
+    @mock.patch.object(run_docsgpt_evaluation.urllib.request, "urlopen")
+    def test_ask_docsgpt_captures_names_and_chunks_without_real_model(self, urlopen):
+        response = mock.MagicMock()
+        response.__enter__.return_value.read.return_value = json.dumps({"answer": "48小时内发货", "sources": [{"filename": "shipping.md", "text": "发货规则\n48小时内发货"}]}).encode("utf-8")
+        urlopen.return_value = response
+        result = run_docsgpt_evaluation.ask_docsgpt(base_url="http://example", api_key="redacted", question="多久", chunks=1, timeout=1)
+        self.assertEqual(["shipping.md"], result["sources"])
+        self.assertEqual("发货规则\n48小时内发货", result["source_chunks"][0]["text"])
 
     def test_utf8_mojibake_is_repaired_without_changing_normal_chinese(self):
         original = "换货时同款商品缺货怎么办？"

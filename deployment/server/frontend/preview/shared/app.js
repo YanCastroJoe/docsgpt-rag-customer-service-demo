@@ -1,4 +1,5 @@
-import { TRACE_STORAGE_KEY, buildTrace, isKnowledgeBoundaryRefusal, resolveQuestion } from './rag_logic.mjs?v=rag-ui-live-v2';
+import { TRACE_STORAGE_KEY, buildTrace, filterAnswerSources, isKnowledgeBoundaryRefusal, resolveQuestion } from './rag_logic.mjs?v=rag-ui-live-v2';
+import { collectLiveStream } from './live_stream.mjs?v=rag-ui-live-v3';
 
 const suggestions = [
   { label: '退货运费', question: '质量问题退货时，运费由谁承担？' },
@@ -217,27 +218,9 @@ async function getLiveAgent() {
   return agent;
 }
 
-function parseStreamFrame(frame, output) {
-  const payloadText = frame
-    .split(/\r?\n/)
-    .filter((line) => line.startsWith('data:'))
-    .map((line) => line.slice(5).trimStart())
-    .join('\n');
-  if (!payloadText) return;
-  let event;
-  try { event = JSON.parse(payloadText); } catch { return; }
-  if (event.type === 'answer' && typeof event.answer === 'string') {
-    if (!event.answer.includes("'type': 'thought'")) output.answer += event.answer;
-  } else if (event.type === 'source' && Array.isArray(event.source)) {
-    output.sources = event.source;
-  } else if (event.type === 'error') {
-    throw new Error(event.error || '回答生成失败');
-  }
-}
-
 function toLiveResult(answer, rawSources) {
   const refusal = isKnowledgeBoundaryRefusal(answer);
-  const effectiveSources = refusal ? [] : rawSources;
+  const effectiveSources = filterAnswerSources(answer, rawSources);
   const sourceRecords = effectiveSources.map((source, index) => ({
     id: `live-source-${index + 1}`,
     section: `来源 ${index + 1}`,
@@ -285,19 +268,7 @@ async function fetchLiveResult(question) {
   });
   if (!response.ok || !response.body) throw new Error(`问答服务暂不可用（HTTP ${response.status}）`);
 
-  const output = { answer: '', sources: [] };
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  while (true) {
-    const { value, done } = await reader.read();
-    buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
-    const frames = buffer.split(/\r?\n\r?\n/);
-    buffer = frames.pop() || '';
-    frames.forEach((frame) => parseStreamFrame(frame, output));
-    if (done) break;
-  }
-  if (buffer.trim()) parseStreamFrame(buffer, output);
+  const output = await collectLiveStream(response);
   return toLiveResult(output.answer, output.sources);
 }
 

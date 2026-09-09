@@ -7,6 +7,7 @@ TARGET = Path("/app/application/api/answer/routes/answer.py")
 IMPORT_OLD = "import logging\nimport traceback\n"
 IMPORT_NEW = '''import ast
 import logging
+import re
 import traceback
 
 
@@ -36,26 +37,63 @@ def _strip_serialized_thought_events(text):
 
 
 def _filter_answer_sources(answer, sources):
-    """Keep only chunks whose heading is named in an explicit source line."""
-    source_notes = "\\n".join(
-        line for line in str(answer or "").splitlines() if "来源：" in line
-    )
-    if not source_notes or not isinstance(sources, list):
-        return sources
-    matched = []
+    """Keep only chunks explicitly identified by an answer source line."""
+    source_lines = [
+        line for line in str(answer or "").splitlines()
+        if re.search(r"来源\\s*[:：]", line)
+    ]
+    if not source_lines or not isinstance(sources, list):
+        return []
+    candidates = []
     for source in sources:
         if not isinstance(source, dict):
             continue
         text = str(source.get("text") or source.get("page_content") or "")
         heading = next((line.strip() for line in text.splitlines() if line.strip()), "")
-        if heading and heading in source_notes:
+        metadata = source.get("metadata") if isinstance(source.get("metadata"), dict) else {}
+        files = [
+            source.get("title"), source.get("file"), source.get("filename"), source.get("source"),
+            metadata.get("title"), metadata.get("file"), metadata.get("filename"), metadata.get("source"),
+        ]
+        details = [
+            heading, source.get("heading"), source.get("section"),
+            source.get("chunk_id"), source.get("id"), metadata.get("heading"),
+            metadata.get("section"), metadata.get("chunk_id"), metadata.get("id"),
+        ]
+        clean = lambda values: [str(value).strip() for value in values if str(value or "").strip()]
+        candidates.append((source, clean(files), clean(details)))
+    def matches(line, value):
+        return re.search(
+            r"(?:^|[\\s·《（(:：])" + re.escape(value) + r"(?:$|[\\s·》）)])", line
+        )
+    matched = []
+    for source, files, details in candidates:
+        if any(
+            matches(line, detail) and (
+                sum(detail in other_details for _, _, other_details in candidates) == 1
+                or any(
+                    matches(line, file) and
+                    sum(file in other_files and detail in other_details for _, other_files, other_details in candidates) == 1
+                    for file in files
+                )
+            )
+            for line in source_lines for detail in details
+        ):
             matched.append(source)
-    return matched or sources
+    return matched
 
 
 def _is_full_knowledge_abstention(answer):
-    """Clear sources only when the entire answer is the standard refusal."""
-    return str(answer or "").strip() == KNOWLEDGE_ABSTENTION
+    """Recognize punctuation/spacing variants, but never a partial answer."""
+    content = "\\n".join(
+        line for line in str(answer or "").splitlines()
+        if not re.match(r"\\s*来源\\s*[:：]", line)
+    )
+    return bool(re.fullmatch(
+        r"\\s*(?:抱歉\\s*[,，。]?\\s*)?当前知识库中未找到相关信息\\s*[,，。；;!！]?\\s*"
+        r"建议联系人工客服确认\\s*[。.!！]?\\s*",
+        content,
+    ))
 '''
 OLD = '''            if stream_result["error"]:
                 return make_response({"error": stream_result["error"]}, 400)

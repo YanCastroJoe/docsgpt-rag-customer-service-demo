@@ -31,6 +31,8 @@ FAILURE_LABELS = {
     "answer_condition_miss": "必答条件遗漏",
     "unexpected_abstention": "知识命中题误拒答",
     "source_citation_miss": "来源引用未命中",
+    "source_chunk_mismatch": "来源 chunk 与回答条件不匹配",
+    "abstention_has_sources": "拒答错误携带来源",
     "boundary_refusal_miss": "知识边界拒答失败",
     "unsupported_boundary_claim": "知识边界无依据扩写",
 }
@@ -120,11 +122,21 @@ def evaluate_case(case: dict[str, Any], response: dict[str, Any] | None) -> dict
 
     answer = str(response.get("answer", response.get("response", ""))).strip()
     sources = normalize_sources(response.get("sources"))
+    chunks_available = "source_chunks" in response
+    raw_chunks = response.get("source_chunks") if chunks_available else []
+    normalized_chunks = normalize_sources(raw_chunks)
+    chunk_texts = [
+        str(item.get("text") or item.get("page_content") or item.get("snippet") or "")
+        for item in raw_chunks
+        if isinstance(item, dict)
+    ] if isinstance(raw_chunks, list) else []
     result.update(
         {
             "status": "scored",
             "answer": answer,
             "sources": sources,
+            "source_chunks": normalized_chunks,
+            "source_validation": "chunk" if chunks_available else "filename_only_unverified",
             "latency_ms": response.get("latency_ms"),
             "conversation_id": response.get("conversation_id"),
             "response_encoding_repaired": bool(
@@ -153,9 +165,22 @@ def evaluate_case(case: dict[str, Any], response: dict[str, Any] | None) -> dict
 
         hints = [hint.lower() for hint in case.get("source_hints", [])]
         source_text = " ".join(sources).lower()
-        result["source_pass"] = bool(hints) and any(
+        filename_hit = bool(hints) and any(
             hint in source_text for hint in hints
         )
+        if chunks_available:
+            chunk_hit = bool(chunk_texts) and all(
+                any(re.search(pattern, text, flags=re.IGNORECASE | re.DOTALL) for pattern in patterns)
+                for text in chunk_texts
+            ) and all(
+                any(re.search(pattern, text, flags=re.IGNORECASE | re.DOTALL) for text in chunk_texts)
+                for pattern in patterns
+            )
+            result["source_pass"] = filename_hit and chunk_hit
+            if filename_hit and not chunk_hit:
+                failures.append("source_chunk_mismatch")
+        else:
+            result["source_pass"] = filename_hit
         if not result["source_pass"]:
             failures.append("source_citation_miss")
     else:
@@ -168,7 +193,9 @@ def evaluate_case(case: dict[str, Any], response: dict[str, Any] | None) -> dict
         result["forbidden_patterns_hit"] = forbidden_hit
         result["condition_coverage"] = len(hit) / len(patterns)
         result["answer_pass"] = bool(answer) and bool(hit) and not forbidden_hit
-        result["source_pass"] = True
+        result["source_pass"] = not sources and not normalized_chunks
+        if not result["source_pass"]:
+            failures.append("abstention_has_sources")
         if forbidden_hit:
             failures.append("unsupported_boundary_claim")
         elif not result["answer_pass"]:
@@ -248,6 +275,13 @@ def build_summary(
         "thought_events_stripped_total": sum(
             int(item.get("thought_events_stripped") or 0)
             for item in submitted
+        ),
+        "chunk_checked_answers": sum(
+            item.get("source_validation") == "chunk" for item in answer_cases
+        ),
+        "filename_only_unverified_answers": sum(
+            item.get("source_validation") == "filename_only_unverified"
+            for item in answer_cases
         ),
     }
 
@@ -341,6 +375,8 @@ def render_report(results: list[dict[str, Any]], summary: dict[str, Any]) -> str
             f"- P50 / P95 / 最大延迟：{latency['p50_ms'] if latency['p50_ms'] is not None else 'N/A'} / {latency['p95_ms'] if latency['p95_ms'] is not None else 'N/A'} / {latency['max_ms'] if latency['max_ms'] is not None else 'N/A'} ms",
             f"- 响应编码修复：{diagnostics['encoding_repaired_answers']} 条",
             f"- 剥离序列化 thought 事件：{diagnostics['answers_with_stripped_thought_events']} 条回答，共 {diagnostics['thought_events_stripped_total']} 个事件",
+            f"- 已检查 chunk 正文：{diagnostics['chunk_checked_answers']} 条知识命中回答",
+            f"- 仅文件名、chunk 未验证：{diagnostics['filename_only_unverified_answers']} 条知识命中回答",
             "",
             "## 失败分类",
             "",

@@ -116,7 +116,7 @@ python scripts/evaluate_rag.py `
   --summary-json evaluation/reports/run_2026xxxx.summary.json
 
 # 前端、规则、部署配置与评测边界回归
-node --test deployment/server/frontend/patch_abstain_sources.test.mjs deployment/server/frontend/demo_shell.test.mjs deployment/server/frontend/preview/rag_logic.test.mjs deployment/server/frontend/preview/rag_multidimensional.test.mjs deployment/server/frontend/preview/local_preview.test.mjs
+node --test deployment/server/frontend/patch_abstain_sources.test.mjs deployment/server/frontend/demo_shell.test.mjs deployment/server/frontend/preview/live_stream.test.mjs deployment/server/frontend/preview/rag_logic.test.mjs deployment/server/frontend/preview/rag_multidimensional.test.mjs deployment/server/frontend/preview/local_preview.test.mjs
 python -m unittest discover -s tests -p "test_*.py"
 ```
 
